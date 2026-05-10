@@ -21,6 +21,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
 import kotlinx.serialization.json.put
 
 private const val CACHE_KEY = "favorites_v1"
@@ -44,6 +45,14 @@ class FavoritesRepository(
 ) {
     private val _favorites = MutableStateFlow<Set<String>>(emptySet())
     val favorites: StateFlow<Set<String>> = _favorites.asStateFlow()
+
+    /**
+     * Per-set favorite counts across all users (keyed by fav_key). Populated
+     * by [loadCounts] from the aggregate RPC; nudged optimistically on every
+     * local [toggle] so the UI reacts before the next sync lands.
+     */
+    private val _counts = MutableStateFlow<Map<String, Int>>(emptyMap())
+    val counts: StateFlow<Map<String, Int>> = _counts.asStateFlow()
 
     private val mutex = Mutex()
     private val pending: MutableMap<String, Intent> = mutableMapOf()
@@ -90,6 +99,11 @@ class FavoritesRepository(
             _favorites.value = if (nowFav) _favorites.value + key else _favorites.value - key
             pending[key] = if (nowFav) Intent.ADD else Intent.REMOVE
             persist(_favorites.value)
+            // Nudge the local count so the badge updates instantly; sync() will
+            // overwrite with the authoritative aggregate.
+            val current = _counts.value[key] ?: 0
+            val next = (if (nowFav) current + 1 else current - 1).coerceAtLeast(0)
+            _counts.value = _counts.value + (key to next)
         }
         runCatching { sync() }
             .onFailure { logE("favorites: sync after toggle failed: ${it.message}") }
@@ -139,6 +153,21 @@ class FavoritesRepository(
             // else: a fresh toggle arrived during the fetch; keep the optimistic
             // view and let the next sync reconcile.
         }
+    }
+
+    /** Pull the per-set aggregate counts across every user. Safe to call alone. */
+    suspend fun loadCounts() {
+        val response = http.pgPost(session, "/rest/v1/rpc/favorite_counts", schema = Config.INSANE_SCHEMA) {
+            setBody(buildJsonObject { /* no args */ })
+        }
+        val rows = json.parseToJsonElement(response.bodyAsText()) as? JsonArray ?: return
+        val parsed = rows.mapNotNull { row ->
+            val obj = row as? JsonObject ?: return@mapNotNull null
+            val key = obj["fav_key"]?.jsonPrimitive?.content ?: return@mapNotNull null
+            val count = obj["count"]?.jsonPrimitive?.long?.toInt() ?: return@mapNotNull null
+            key to count
+        }.toMap()
+        _counts.value = parsed
     }
 
     private fun applyPending(base: Set<String>): Set<String> {

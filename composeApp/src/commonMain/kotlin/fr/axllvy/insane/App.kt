@@ -42,6 +42,7 @@ fun App() {
         deps.favorites.loadFromCache()
         deps.lineup.refresh(::nowMs)
         runCatching { deps.favorites.sync() }
+        runCatching { deps.favorites.loadCounts() }
         runCatching { deps.friends.loadAll() }
     }
 
@@ -67,6 +68,7 @@ fun App() {
                 onRefresh = {
                     val outcome = deps.lineup.refresh(::nowMs)
                     runCatching { deps.favorites.sync() }
+                    runCatching { deps.favorites.loadCounts() }
                     outcome
                 },
             )

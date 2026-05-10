@@ -314,3 +314,23 @@ $$;
 
 revoke all on function insane.redeem_friend_code(text) from public;
 grant execute on function insane.redeem_friend_code(text) to authenticated;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- §6. Aggregate favorite counts — RLS hides individual rows from non-friends,
+--     so a direct SELECT can't answer "how many users favorited this set?".
+--     SECURITY DEFINER lets the function aggregate across every row while
+--     exposing only (fav_key, count) — no user_ids leak.
+-- ─────────────────────────────────────────────────────────────────────────────
+create or replace function insane.favorite_counts()
+returns table(fav_key text, count bigint)
+language sql
+security definer
+set search_path = insane, public
+as $$
+  select fav_key, count(*)::bigint
+    from insane.favorites
+   group by fav_key;
+$$;
+
+revoke all on function insane.favorite_counts() from public;
+grant execute on function insane.favorite_counts() to authenticated;

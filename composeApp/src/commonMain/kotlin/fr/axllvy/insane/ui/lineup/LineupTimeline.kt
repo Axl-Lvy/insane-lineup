@@ -54,6 +54,7 @@ internal fun Timeline(
     day: DayKey,
     hiddenStages: Set<StageKey>,
     favs: Set<String>,
+    favCounts: Map<String, Int>,
     favsOnly: Boolean,
     visibleFriends: Set<String>,
     friendFavorites: Map<String, Set<String>>,
@@ -91,6 +92,7 @@ internal fun Timeline(
                             sets = dayData[stage].orEmpty(),
                             day = day,
                             favs = favs,
+                            favCounts = favCounts,
                             favsOnly = favsOnly,
                             visibleFriends = visibleFriends,
                             friendFavorites = friendFavorites,
@@ -138,6 +140,7 @@ private fun StageColumn(
     sets: List<SetEntry>,
     day: DayKey,
     favs: Set<String>,
+    favCounts: Map<String, Int>,
     favsOnly: Boolean,
     visibleFriends: Set<String>,
     friendFavorites: Map<String, Set<String>>,
@@ -161,6 +164,7 @@ private fun StageColumn(
             val dimmed = favsOnly && !isFav
             val friendsWhoLikeIt = visibleFriends.filter { friendFavorites[it].orEmpty().contains(key) }
             val hasFriendInterest = friendsWhoLikeIt.isNotEmpty()
+            val favCount = favCounts[key] ?: 0
 
             val baseBg = meta.color.copy(alpha = if (isFav) 0.22f else 0.12f)
             val borderColor = when {
@@ -217,13 +221,29 @@ private fun StageColumn(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
-                if (isFav) {
-                    Icon(
-                        Icons.Filled.Star,
-                        contentDescription = null,
-                        tint = InsaneColors.Star,
-                        modifier = Modifier.size(11.dp).align(Alignment.TopEnd),
-                    )
+                if (isFav || favCount > 0) {
+                    Row(
+                        modifier = Modifier.align(Alignment.TopEnd),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    ) {
+                        if (favCount > 0) {
+                            Text(
+                                favCount.toString(),
+                                color = InsaneColors.OnBgDim.copy(alpha = if (dimmed) 0.3f else 1f),
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                        if (isFav) {
+                            Icon(
+                                Icons.Filled.Star,
+                                contentDescription = null,
+                                tint = InsaneColors.Star,
+                                modifier = Modifier.size(11.dp),
+                            )
+                        }
+                    }
                 }
             }
         }

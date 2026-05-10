@@ -61,6 +61,7 @@ fun LineupScreen(
     val scope = rememberCoroutineScope()
     var day by rememberSaveable { mutableStateOf(DayKey.JEU) }
     val favs by favoritesRepo.favorites.collectAsState()
+    val favCounts by favoritesRepo.counts.collectAsState()
     val notificationsEnabled by notifications.enabled.collectAsState()
     var favsOnly by rememberSaveable { mutableStateOf(false) }
     var hiddenStages by rememberSaveable { mutableStateOf(setOf<StageKey>()) }
@@ -131,6 +132,7 @@ fun LineupScreen(
                 day = day,
                 hiddenStages = hiddenStages,
                 favs = favs,
+                favCounts = favCounts,
                 favsOnly = favsOnly,
                 visibleFriends = visibleFriends,
                 friendFavorites = friendFavorites,
@@ -158,6 +160,7 @@ fun LineupScreen(
                 day = day,
                 state = state,
                 isFav = key in favs,
+                favCount = favCounts[key] ?: 0,
                 onToggleFav = { scope.launch { favoritesRepo.toggle(key) } },
                 onDismiss = { selected = null },
             )

@@ -19,7 +19,7 @@ Paste `supabase/migrations/001_friends_feature.sql` into the Supabase SQL editor
 
 - Creates the `insane` schema and **moves** `insane_lineup` into it (`alter table … set schema insane`).
 - Creates `profiles`, `favorites`, `friendships` tables (with RLS) in `insane`.
-- Creates `rotate_friend_code()` and `redeem_friend_code(text)` RPCs (security definer) in `insane`.
+- Creates `rotate_friend_code()`, `redeem_friend_code(text)`, and `favorite_counts()` RPCs (security definer) in `insane`.
 - Adds a trigger that creates a profile row on every new auth user.
 - Adds an `authenticated`-role SELECT policy on `insane.insane_lineup` (the existing `anon` policy follows the table).
 

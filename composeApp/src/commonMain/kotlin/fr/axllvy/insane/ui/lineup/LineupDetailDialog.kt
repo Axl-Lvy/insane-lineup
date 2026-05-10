@@ -33,6 +33,9 @@ import fr.axllvy.insane.data.LineupState
 import fr.axllvy.insane.data.StageKey
 import fr.axllvy.insane.resources.Res
 import fr.axllvy.insane.resources.detail_add_to_favorites
+import fr.axllvy.insane.resources.detail_fav_count_none
+import fr.axllvy.insane.resources.detail_fav_count_one
+import fr.axllvy.insane.resources.detail_fav_count_other
 import fr.axllvy.insane.resources.detail_favorite_active
 import fr.axllvy.insane.ui.InsaneColors
 import fr.axllvy.insane.ui.dayFullLabel
@@ -45,6 +48,7 @@ internal fun DetailDialog(
     day: DayKey,
     state: LineupState,
     isFav: Boolean,
+    favCount: Int,
     onToggleFav: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -81,6 +85,27 @@ internal fun DetailDialog(
             Text(set.a, color = InsaneColors.OnBg, fontSize = 28.sp, fontWeight = FontWeight.Bold)
             Text("${set.s} → ${set.e}", color = InsaneColors.OnBgEmphasis, fontSize = 16.sp)
             Text(dayFullLabel(day).uppercase(), color = InsaneColors.OnBgDim, fontSize = 11.sp)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Icon(
+                    Icons.Filled.Star,
+                    contentDescription = null,
+                    tint = if (favCount > 0) InsaneColors.Star else InsaneColors.OnBgFaint,
+                    modifier = Modifier.size(14.dp),
+                )
+                Text(
+                    text = when (favCount) {
+                        0 -> stringResource(Res.string.detail_fav_count_none)
+                        1 -> stringResource(Res.string.detail_fav_count_one)
+                        else -> stringResource(Res.string.detail_fav_count_other, favCount)
+                    },
+                    color = InsaneColors.OnBgEmphasis,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+            }
             Row(
                 Modifier
                     .fillMaxWidth()

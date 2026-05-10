@@ -44,6 +44,9 @@
   <!-- Lineup detail dialog -->
   <string name="detail_favorite_active">FAVORI</string>
   <string name="detail_add_to_favorites">AJOUTER AUX FAVORIS</string>
+  <string name="detail_fav_count_none">Personne ne l\'a en favori</string>
+  <string name="detail_fav_count_one">1 personne l\'a en favori</string>
+  <string name="detail_fav_count_other">%1$d personnes l\'ont en favori</string>
 
   <!-- Friends sheet -->
   <string name="friends_title">AMIS</string>
