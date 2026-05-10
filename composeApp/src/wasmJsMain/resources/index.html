@@ -14,10 +14,24 @@
         #loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
             background: radial-gradient(ellipse at top, #1a1530 0%, #0a0814 50%, #050309 100%);
             color: #a78bfa; font-size: 12px; letter-spacing: 0.2em; }
+        #android-banner { position: fixed; right: 12px; bottom: 12px; z-index: 1000;
+            display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px;
+            background: rgba(26, 21, 48, 0.92); color: #e9d5ff;
+            border: 1px solid rgba(167, 139, 250, 0.4); border-radius: 999px;
+            font-family: system-ui, sans-serif; font-size: 12px; text-decoration: none;
+            backdrop-filter: blur(6px); box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+        #android-banner:hover { background: rgba(46, 36, 80, 0.95); border-color: #a78bfa; }
+        #android-banner-close { margin-left: 4px; color: #a78bfa; cursor: pointer;
+            font-size: 14px; line-height: 1; opacity: 0.7; }
+        #android-banner-close:hover { opacity: 1; }
     </style>
 </head>
 <body>
     <div id="loading">LOADING…</div>
+    <a id="android-banner" href="https://github.com/Axl-Lvy/insane-lineup/releases" target="_blank" rel="noopener">
+        Android app available
+        <span id="android-banner-close" title="Dismiss" onclick="event.preventDefault(); event.stopPropagation(); document.getElementById('android-banner').remove();">×</span>
+    </a>
     <script type="application/javascript" src="insane-lineup.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
