@@ -1,6 +1,7 @@
 package fr.axllvy.insane.notifications
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
@@ -19,6 +20,8 @@ object AndroidPermissionRequester {
     private var launcher: ActivityResultLauncher<String>? = null
     private var pending: CompletableDeferred<Boolean>? = null
 
+    // Lint flags this for Fragment <1.3.0; we use ComponentActivity (androidx.activity 1.10.1).
+    @SuppressLint("InvalidFragmentVersionForActivityResult")
     fun attach(activity: ComponentActivity) {
         launcher = activity.registerForActivityResult(
             ActivityResultContracts.RequestPermission(),
