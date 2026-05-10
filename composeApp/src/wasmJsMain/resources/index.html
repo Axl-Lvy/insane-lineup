@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+    <meta name="theme-color" content="#0a0814"/>
+    <link rel="manifest" href="manifest.webmanifest"/>
+    <title>Insane Lineup</title>
+    <style>
+        html, body { margin: 0; padding: 0; height: 100%; background: #050309; color: #fff;
+            font-family: system-ui, sans-serif; overscroll-behavior: none; }
+        #loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+            background: radial-gradient(ellipse at top, #1a1530 0%, #0a0814 50%, #050309 100%);
+            color: #a78bfa; font-size: 12px; letter-spacing: 0.2em; }
+    </style>
+</head>
+<body>
+    <div id="loading">LOADING…</div>
+    <script type="application/javascript" src="inase-lineup.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Hide loader when wasm has rendered something
+            var obs = new MutationObserver(function() {
+                if (document.body.children.length > 1) {
+                    var l = document.getElementById("loading");
+                    if (l) l.remove();
+                    obs.disconnect();
+                }
+            });
+            obs.observe(document.body, { childList: true });
+        });
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", function() {
+                navigator.serviceWorker.register("sw.js").catch(function(){});
+            });
+        }
+    </script>
+</body>
+</html>
