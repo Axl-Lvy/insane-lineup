@@ -51,7 +51,7 @@ kotlin {
 
             implementation(libs.multiplatform.settings)
 
-            implementation(libs.goquati.qr)
+            implementation(libs.qrose)
         }
 
         androidMain.dependencies {
