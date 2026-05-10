@@ -6,7 +6,7 @@
 
   <!-- Snackbar -->
   <string name="snackbar_lineup_refreshed">Lineup refreshed</string>
-  <string name="snackbar_offline">You\'re offline</string>
+  <string name="snackbar_offline">You're offline</string>
   <string name="snackbar_refresh_failed">Refresh failed</string>
   <string name="snackbar_friend_added">Added %1$s</string>
   <string name="snackbar_friend_added_default">friend</string>
@@ -72,5 +72,5 @@
   <!-- QR Scanner -->
   <string name="scanner_title">SCAN A FRIEND CODE</string>
   <string name="scanner_web_title">SCAN ON MOBILE</string>
-  <string name="scanner_web_message">QR scanning isn\'t available in the web build yet. Open the app on your phone, or type the 6-character code your friend shared.</string>
+  <string name="scanner_web_message">QR scanning isn't available in the web build yet. Open the app on your phone, or type the 6-character code your friend shared.</string>
 </resources>

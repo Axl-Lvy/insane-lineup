@@ -37,30 +37,30 @@
   <string name="cd_refresh">Rafraîchir</string>
   <string name="cd_close">Fermer</string>
   <string name="cd_scan_qr">Scanner QR</string>
-  <string name="cd_remove_friend">Retirer l\'ami</string>
+  <string name="cd_remove_friend">Retirer l'ami</string>
   <string name="cd_qr_code">Code QR pour %1$s</string>
   <string name="cd_notifications">Notifications</string>
 
   <!-- Lineup detail dialog -->
   <string name="detail_favorite_active">FAVORI</string>
   <string name="detail_add_to_favorites">AJOUTER AUX FAVORIS</string>
-  <string name="detail_fav_count_none">Personne ne l\'a en favori</string>
-  <string name="detail_fav_count_one">1 personne l\'a en favori</string>
-  <string name="detail_fav_count_other">%1$d personnes l\'ont en favori</string>
+  <string name="detail_fav_count_none">Personne ne l'a en favori</string>
+  <string name="detail_fav_count_one">1 personne l'a en favori</string>
+  <string name="detail_fav_count_other">%1$d personnes l'ont en favori</string>
 
   <!-- Friends sheet -->
   <string name="friends_title">AMIS</string>
   <string name="friends_count_label">AMIS · %1$s</string>
-  <string name="friends_my_invite_code">MON CODE D\'INVITATION</string>
+  <string name="friends_my_invite_code">MON CODE D'INVITATION</string>
   <string name="friends_btn_generate">GÉNÉRER</string>
   <string name="friends_btn_rotate">RENOUVELER</string>
-  <string name="friends_generate_help">Touchez GÉNÉRER pour créer un code de 6 caractères valable 10 minutes. Partagez-le ou montrez votre QR à un ami pour l\'ajouter.</string>
+  <string name="friends_generate_help">Touchez GÉNÉRER pour créer un code de 6 caractères valable 10 minutes. Partagez-le ou montrez votre QR à un ami pour l'ajouter.</string>
   <string name="friends_code_expired">EXPIRÉ · RENOUVELEZ POUR UN NOUVEAU CODE</string>
   <string name="friends_code_expires_in">EXPIRE DANS %1$s:%2$s</string>
   <string name="friends_add_friend_label">AJOUTER UN AMI</string>
   <string name="friends_code_placeholder">ABC123</string>
-  <string name="friends_btn_add">AJOUTER L\'AMI</string>
-  <string name="friends_empty_state">Aucun ami pour l\'instant. Partagez votre code ou scannez celui d\'un ami pour commencer.</string>
+  <string name="friends_btn_add">AJOUTER L'AMI</string>
+  <string name="friends_empty_state">Aucun ami pour l'instant. Partagez votre code ou scannez celui d'un ami pour commencer.</string>
   <string name="friends_visibility_on">ON</string>
   <string name="friends_visibility_off">OFF</string>
 
@@ -70,7 +70,7 @@
   <string name="display_name_placeholder">ex. Camille</string>
 
   <!-- QR Scanner -->
-  <string name="scanner_title">SCANNEZ UN CODE D\'AMI</string>
+  <string name="scanner_title">SCANNEZ UN CODE D'AMI</string>
   <string name="scanner_web_title">SCANNEZ SUR MOBILE</string>
-  <string name="scanner_web_message">Le scan QR n\'est pas encore disponible dans la version web. Ouvrez l\'app sur votre téléphone, ou tapez le code à 6 caractères partagé par votre ami.</string>
+  <string name="scanner_web_message">Le scan QR n'est pas encore disponible dans la version web. Ouvrez l'app sur votre téléphone, ou tapez le code à 6 caractères partagé par votre ami.</string>
 </resources>
