@@ -1,8 +1,8 @@
-package fr.axllvy.inase
+package fr.axllvy.insane
 
 import android.app.Application
 
-class InaseApplication : Application() {
+class InsaneApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         appContext = applicationContext

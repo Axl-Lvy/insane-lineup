@@ -1,4 +1,4 @@
-rootProject.name = "inase-lineup"
+rootProject.name = "insane-lineup"
 
 pluginManagement {
     repositories {

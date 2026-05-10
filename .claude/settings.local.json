@@ -6,7 +6,8 @@
       "Bash(./gradlew.bat :composeApp:compileDebugKotlinAndroid --rerun-tasks --console=plain)",
       "Bash(gh auth *)",
       "Bash(git init *)",
-      "Bash(gh repo *)"
+      "Bash(gh repo *)",
+      "Bash(./gradlew :composeApp:compileKotlinWasmJs)"
     ]
   },
   "enabledPlugins": {

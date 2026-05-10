@@ -1,4 +1,4 @@
-package fr.axllvy.inase
+package fr.axllvy.insane
 
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.ComposeViewport

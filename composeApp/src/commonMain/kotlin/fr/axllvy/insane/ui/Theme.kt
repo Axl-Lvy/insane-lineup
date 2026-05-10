@@ -1,4 +1,4 @@
-package fr.axllvy.inase.ui
+package fr.axllvy.insane.ui
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -9,10 +9,10 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
-import fr.axllvy.inase.data.StageKey
+import fr.axllvy.insane.data.StageKey
 
 @Immutable
-data class InaseColorPalette(
+data class InsaneColorPalette(
     val bg: Color,
     val bgMid: Color,
     val bgTop: Color,
@@ -34,7 +34,7 @@ data class InaseColorPalette(
     val isDark: Boolean,
 )
 
-private val DarkPalette = InaseColorPalette(
+private val DarkPalette = InsaneColorPalette(
     bg = Color(0xFF050309),
     bgMid = Color(0xFF0A0814),
     bgTop = Color(0xFF1A1530),
@@ -56,7 +56,7 @@ private val DarkPalette = InaseColorPalette(
     isDark = true,
 )
 
-private val LightPalette = InaseColorPalette(
+private val LightPalette = InsaneColorPalette(
     bg = Color(0xFFFAFAFC),
     bgMid = Color(0xFFF0EEF5),
     bgTop = Color(0xFFE8E2F2),
@@ -78,27 +78,27 @@ private val LightPalette = InaseColorPalette(
     isDark = false,
 )
 
-val LocalInaseColors = staticCompositionLocalOf { DarkPalette }
+val LocalInsaneColors = staticCompositionLocalOf { DarkPalette }
 
-object InaseColors {
-    val Bg: Color @Composable get() = LocalInaseColors.current.bg
-    val BgMid: Color @Composable get() = LocalInaseColors.current.bgMid
-    val BgTop: Color @Composable get() = LocalInaseColors.current.bgTop
-    val OnBg: Color @Composable get() = LocalInaseColors.current.onBg
-    val OnBgEmphasis: Color @Composable get() = LocalInaseColors.current.onBgEmphasis
-    val OnBgTimeChip: Color @Composable get() = LocalInaseColors.current.onBgTimeChip
-    val OnBgSubtle: Color @Composable get() = LocalInaseColors.current.onBgSubtle
-    val OnBgDim: Color @Composable get() = LocalInaseColors.current.onBgDim
-    val OnBgFaint: Color @Composable get() = LocalInaseColors.current.onBgFaint
-    val Border: Color @Composable get() = LocalInaseColors.current.border
-    val GridLine: Color @Composable get() = LocalInaseColors.current.gridLine
-    val ColumnBg: Color @Composable get() = LocalInaseColors.current.columnBg
-    val TabInactiveBg: Color @Composable get() = LocalInaseColors.current.tabInactiveBg
-    val HeaderBg: Color @Composable get() = LocalInaseColors.current.headerBg
-    val DialogScrim: Color @Composable get() = LocalInaseColors.current.dialogScrim
-    val Accent: Color @Composable get() = LocalInaseColors.current.accent
-    val Star: Color @Composable get() = LocalInaseColors.current.star
-    val Warn: Color @Composable get() = LocalInaseColors.current.warn
+object InsaneColors {
+    val Bg: Color @Composable get() = LocalInsaneColors.current.bg
+    val BgMid: Color @Composable get() = LocalInsaneColors.current.bgMid
+    val BgTop: Color @Composable get() = LocalInsaneColors.current.bgTop
+    val OnBg: Color @Composable get() = LocalInsaneColors.current.onBg
+    val OnBgEmphasis: Color @Composable get() = LocalInsaneColors.current.onBgEmphasis
+    val OnBgTimeChip: Color @Composable get() = LocalInsaneColors.current.onBgTimeChip
+    val OnBgSubtle: Color @Composable get() = LocalInsaneColors.current.onBgSubtle
+    val OnBgDim: Color @Composable get() = LocalInsaneColors.current.onBgDim
+    val OnBgFaint: Color @Composable get() = LocalInsaneColors.current.onBgFaint
+    val Border: Color @Composable get() = LocalInsaneColors.current.border
+    val GridLine: Color @Composable get() = LocalInsaneColors.current.gridLine
+    val ColumnBg: Color @Composable get() = LocalInsaneColors.current.columnBg
+    val TabInactiveBg: Color @Composable get() = LocalInsaneColors.current.tabInactiveBg
+    val HeaderBg: Color @Composable get() = LocalInsaneColors.current.headerBg
+    val DialogScrim: Color @Composable get() = LocalInsaneColors.current.dialogScrim
+    val Accent: Color @Composable get() = LocalInsaneColors.current.accent
+    val Star: Color @Composable get() = LocalInsaneColors.current.star
+    val Warn: Color @Composable get() = LocalInsaneColors.current.warn
 }
 
 data class StageMeta(val color: Color, val label: String)
@@ -111,7 +111,7 @@ val stageMeta: Map<StageKey, StageMeta> = mapOf(
 )
 
 @Composable
-fun InaseTheme(content: @Composable () -> Unit) {
+fun InsaneTheme(content: @Composable () -> Unit) {
     val dark = isSystemInDarkTheme()
     val palette = if (dark) DarkPalette else LightPalette
     val scheme = if (dark) {
@@ -131,7 +131,7 @@ fun InaseTheme(content: @Composable () -> Unit) {
             onSurface = palette.onBg,
         )
     }
-    CompositionLocalProvider(LocalInaseColors provides palette) {
+    CompositionLocalProvider(LocalInsaneColors provides palette) {
         MaterialTheme(colorScheme = scheme, content = content)
     }
 }

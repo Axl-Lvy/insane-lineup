@@ -1,4 +1,4 @@
-package fr.axllvy.inase.data
+package fr.axllvy.insane.data
 
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation

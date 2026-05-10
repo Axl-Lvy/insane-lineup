@@ -1,4 +1,4 @@
-package fr.axllvy.inase
+package fr.axllvy.insane
 
 object Config {
     // Public Supabase project URL — same one shipped in the Axl-Lvy website
@@ -12,4 +12,8 @@ object Config {
 
     const val LINEUP_TABLE: String = "insane_lineup"
     const val LINEUP_ROW_ID: Int = 1
+
+    // PostgREST schema the table lives in. The Supabase project defaults to
+    // "memor_chess" so we must override per-request via Accept-Profile.
+    const val LINEUP_SCHEMA: String = "public"
 }

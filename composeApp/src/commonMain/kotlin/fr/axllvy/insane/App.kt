@@ -1,4 +1,4 @@
-package fr.axllvy.inase
+package fr.axllvy.insane
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -11,13 +11,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import fr.axllvy.inase.data.LineupRepository
-import fr.axllvy.inase.data.SupabaseLineupClient
-import fr.axllvy.inase.data.createHttpClient
-import fr.axllvy.inase.data.createSettings
-import fr.axllvy.inase.ui.InaseColors
-import fr.axllvy.inase.ui.InaseTheme
-import fr.axllvy.inase.ui.LineupScreen
+import fr.axllvy.insane.data.LineupRepository
+import fr.axllvy.insane.data.SupabaseLineupClient
+import fr.axllvy.insane.data.createHttpClient
+import fr.axllvy.insane.data.createSettings
+import fr.axllvy.insane.ui.InsaneColors
+import fr.axllvy.insane.ui.InsaneTheme
+import fr.axllvy.insane.ui.LineupScreen
 
 @Composable
 fun App() {
@@ -34,14 +34,14 @@ fun App() {
         repo.refresh(::nowMs)
     }
 
-    InaseTheme {
+    InsaneTheme {
         val current = state
         if (current == null) {
             Box(
-                Modifier.fillMaxSize().background(InaseColors.Bg),
+                Modifier.fillMaxSize().background(InsaneColors.Bg),
                 contentAlignment = Alignment.Center,
             ) {
-                CircularProgressIndicator(color = InaseColors.Accent)
+                CircularProgressIndicator(color = InsaneColors.Accent)
             }
         } else {
             LineupScreen(

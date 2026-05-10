@@ -1,4 +1,4 @@
-# inase-lineup
+# insane-lineup
 
 Tiny Kotlin Multiplatform read-only viewer for the Insane Festival lineup. Targets Android, iOS, and the Web (Compose for Wasm). Connects directly to the Supabase `insane_lineup` table for refreshes, caches the result locally, and works completely offline.
 
@@ -28,7 +28,7 @@ This gives unauthenticated reads only — writes still require the service role 
 
 ### 2. Fill in `Config.kt`
 
-Edit `composeApp/src/commonMain/kotlin/fr/axllvy/inase/Config.kt` with your project URL and anon key (same values as `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in the website's `.env`):
+Edit `composeApp/src/commonMain/kotlin/fr/axllvy/insane/Config.kt` with your project URL and anon key (same values as `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in the website's `.env`):
 
 ```kotlin
 const val SUPABASE_URL: String = "https://xxxxx.supabase.co"
@@ -59,11 +59,11 @@ composeApp/build/dist/wasmJs/productionExecutable/
 To vendor it into the parent `Axl-Lvy` site (same pattern as `public/tarotmeter/` and `public/memorchess/`):
 
 ```bash
-rm -rf ../Axl-Lvy/public/inase
-cp -R composeApp/build/dist/wasmJs/productionExecutable ../Axl-Lvy/public/inase
+rm -rf ../Axl-Lvy/public/insane
+cp -R composeApp/build/dist/wasmJs/productionExecutable ../Axl-Lvy/public/insane
 ```
 
-Then add a rewrite in `Axl-Lvy/next.config.mjs` so `/inase` resolves to `index.html`. The wasm runtime needs `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp`, just like `/tarotmeter` and `/memorchess`. Add a matching block under `headers()` for `/inase/:path*`.
+Then add a rewrite in `Axl-Lvy/next.config.mjs` so `/insane` resolves to `index.html`. The wasm runtime needs `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp`, just like `/tarotmeter` and `/memorchess`. Add a matching block under `headers()` for `/insane/:path*`.
 
 ## Offline behavior
 
@@ -75,7 +75,7 @@ Then add a rewrite in `Axl-Lvy/next.config.mjs` so `/inase` resolves to `index.h
 ```
 composeApp/src/
 ├── commonMain/         # all UI + data layer + Lineup model
-│   ├── kotlin/fr/axllvy/inase/
+│   ├── kotlin/fr/axllvy/insane/
 │   │   ├── App.kt
 │   │   ├── Config.kt              # Supabase URL + anon key
 │   │   ├── data/                  # repository, cache, Supabase client

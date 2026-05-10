@@ -23,10 +23,10 @@ kotlin {
 
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
-        moduleName = "inase-lineup"
+        moduleName = "insane-lineup"
         browser {
             commonWebpackConfig {
-                outputFileName = "inase-lineup.js"
+                outputFileName = "insane-lineup.js"
             }
         }
         binaries.executable()
@@ -74,16 +74,16 @@ kotlin {
 
 compose.resources {
     publicResClass = false
-    packageOfResClass = "fr.axllvy.inase.resources"
+    packageOfResClass = "fr.axllvy.insane.resources"
     generateResClass = auto
 }
 
 android {
-    namespace = "fr.axllvy.inase"
+    namespace = "fr.axllvy.insane"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "fr.axllvy.inase"
+        applicationId = "fr.axllvy.insane"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1

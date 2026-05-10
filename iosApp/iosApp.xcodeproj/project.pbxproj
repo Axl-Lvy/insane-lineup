@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		3FCB9C73151DAE3FCC3FBAF8 /* InaseLineup.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = InaseLineup.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3FCB9C73151DAE3FCC3FBAF8 /* InsaneLineup.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = InsaneLineup.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -59,7 +59,7 @@
 		8AE712548C18998FB6D65667 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				3FCB9C73151DAE3FCC3FBAF8 /* InaseLineup.app */,
+				3FCB9C73151DAE3FCC3FBAF8 /* InsaneLineup.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -87,7 +87,7 @@
 			packageProductDependencies = (
 			);
 			productName = iosApp;
-			productReference = 3FCB9C73151DAE3FCC3FBAF8 /* InaseLineup.app */;
+			productReference = 3FCB9C73151DAE3FCC3FBAF8 /* InsaneLineup.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */

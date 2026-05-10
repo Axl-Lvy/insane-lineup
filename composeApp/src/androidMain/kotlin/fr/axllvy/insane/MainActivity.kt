@@ -1,4 +1,4 @@
-package fr.axllvy.inase
+package fr.axllvy.insane
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

@@ -1,5 +1,5 @@
 // Stale-while-revalidate service worker for offline support.
-const CACHE = "inase-lineup-v1";
+const CACHE = "insane-lineup-v1";
 
 self.addEventListener("install", (e) => { self.skipWaiting(); });
 

@@ -1,11 +1,11 @@
-package fr.axllvy.inase.data
+package fr.axllvy.insane.data
 
 import android.content.Context
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.SharedPreferencesSettings
-import fr.axllvy.inase.InaseApplication
+import fr.axllvy.insane.InsaneApplication
 
 actual fun createSettings(): Settings {
-    val prefs = InaseApplication.appContext.getSharedPreferences("inase", Context.MODE_PRIVATE)
+    val prefs = InsaneApplication.appContext.getSharedPreferences("insane", Context.MODE_PRIVATE)
     return SharedPreferencesSettings(prefs)
 }

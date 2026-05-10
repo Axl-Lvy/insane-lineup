@@ -1,7 +1,7 @@
-package fr.axllvy.inase.data
+package fr.axllvy.insane.data
 
 import com.russhwolf.settings.Settings
-import fr.axllvy.inase.resources.Res
+import fr.axllvy.insane.resources.Res
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -56,24 +56,24 @@ class LineupRepository(
     suspend fun refresh(now: () -> Long): RefreshOutcome {
         val current = _state.value
         if (current != null) _state.value = current.copy(refreshing = true, lastError = null)
-        println("[Inase] refresh start (current source=${current?.source})")
+        println("[Insane] refresh start (current source=${current?.source})")
         return try {
             val fresh = client.fetchLineup()
             if (fresh != null) {
                 settings.putString(CACHE_KEY, serializeLineup(fresh))
                 settings.putLong(CACHE_AT_KEY, now())
                 _state.value = LineupState(fresh, LineupSource.Fresh)
-                println("[Inase] refresh OK: ${fresh.size} day(s)")
+                println("[Insane] refresh OK: ${fresh.size} day(s)")
                 RefreshOutcome.Refreshed
             } else {
                 if (current != null) _state.value = current.copy(refreshing = false, lastError = "Empty response")
-                println("[Inase] refresh: client returned null lineup")
+                println("[Insane] refresh: client returned null lineup")
                 RefreshOutcome.Error("Empty response")
             }
         } catch (t: Throwable) {
             val offline = t.looksOffline()
             val msg = t.message ?: "Network error"
-            println("[Inase] refresh threw ${t::class.simpleName}: $msg (offline=$offline)")
+            println("[Insane] refresh threw ${t::class.simpleName}: $msg (offline=$offline)")
             _state.value = current?.copy(
                 refreshing = false,
                 lastError = if (offline) "Offline" else msg,

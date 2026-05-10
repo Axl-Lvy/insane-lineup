@@ -1,4 +1,4 @@
-package fr.axllvy.inase
+package fr.axllvy.insane
 
 import platform.Foundation.NSDate
 import platform.Foundation.timeIntervalSince1970

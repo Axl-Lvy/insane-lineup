@@ -1,4 +1,4 @@
-package fr.axllvy.inase.data
+package fr.axllvy.insane.data
 
 import kotlinx.serialization.Serializable
 

@@ -1,5 +1,10 @@
-package fr.axllvy.inase.ui
+package fr.axllvy.insane.ui
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,7 +20,6 @@ import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -25,20 +29,25 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import fr.axllvy.inase.data.DayKey
-import fr.axllvy.inase.data.LineupSource
-import fr.axllvy.inase.data.LineupState
-import fr.axllvy.inase.data.RefreshOutcome
-import fr.axllvy.inase.data.SetEntry
-import fr.axllvy.inase.data.StageKey
-import fr.axllvy.inase.data.timeToMin
+import fr.axllvy.insane.data.DayKey
+import fr.axllvy.insane.data.LineupSource
+import fr.axllvy.insane.data.LineupState
+import fr.axllvy.insane.data.RefreshOutcome
+import fr.axllvy.insane.data.SetEntry
+import fr.axllvy.insane.data.StageKey
+import fr.axllvy.insane.data.timeToMin
 import kotlinx.coroutines.launch
 
 private const val DAY_TOTAL_MIN = 16 * 60
@@ -108,8 +117,8 @@ fun LineupScreen(state: LineupState, onRefresh: suspend () -> RefreshOutcome) {
             snackbar = { data ->
                 Snackbar(
                     snackbarData = data,
-                    containerColor = InaseColors.BgMid,
-                    contentColor = InaseColors.OnBg,
+                    containerColor = InsaneColors.BgMid,
+                    contentColor = InsaneColors.OnBg,
                 )
             },
         )
@@ -129,8 +138,10 @@ fun LineupScreen(state: LineupState, onRefresh: suspend () -> RefreshOutcome) {
 
 @Composable
 private fun verticalGradient() = Brush.verticalGradient(
-    listOf(InaseColors.BgTop, InaseColors.BgMid, InaseColors.Bg)
+    listOf(InsaneColors.BgTop, InsaneColors.BgMid, InsaneColors.Bg)
 )
+
+private val LiveMagenta = Color(0xFFF472B6)
 
 @Composable
 private fun Header(
@@ -144,118 +155,270 @@ private fun Header(
     favCount: Int,
     onRefresh: () -> Unit,
 ) {
+    val pulse by rememberInfiniteTransition(label = "header-pulse").animateFloat(
+        initialValue = 0.35f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(900),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "live-dot",
+    )
+
+    val headerBg = InsaneColors.HeaderBg
+    val accent = InsaneColors.Accent
+    val gridLine = InsaneColors.GridLine
+
     Column(
         Modifier
             .fillMaxWidth()
-            .background(Color(0xD9_0A_08_14))
-            .padding(horizontal = 12.dp, vertical = 10.dp)
-            .border(1.dp, InaseColors.Border, RoundedCornerShape(0.dp)),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+            .drawBehind {
+                drawRect(headerBg)
+                drawRect(
+                    brush = Brush.radialGradient(
+                        colors = listOf(accent.copy(alpha = 0.35f), accent.copy(alpha = 0f)),
+                        center = Offset(size.width * 0.05f, 0f),
+                        radius = size.maxDimension * 0.85f,
+                    )
+                )
+                val gap = 3.dp.toPx()
+                var y = 0f
+                while (y < size.height) {
+                    drawLine(
+                        color = gridLine,
+                        start = Offset(0f, y),
+                        end = Offset(size.width, y),
+                        strokeWidth = 1f,
+                    )
+                    y += gap
+                }
+                val stripe = 2.dp.toPx()
+                drawRect(
+                    color = accent,
+                    topLeft = Offset(0f, size.height - stripe),
+                    size = Size(size.width, stripe),
+                )
+            }
+            .padding(start = 14.dp, end = 12.dp, top = 12.dp, bottom = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
+        // ── Status bar: live indicator + transmission tag + refresh
         Row(
             Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(Modifier.weight(1f)) {
-                Text(
-                    "INSANE FESTIVAL",
-                    color = Color.White,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    "Beyond ✦ Reality",
-                    color = InaseColors.Accent,
-                    fontSize = 10.sp,
-                )
-            }
-            IconButton(onClick = onRefresh, enabled = !state.refreshing) {
+            Box(
+                Modifier
+                    .alpha(pulse)
+                    .size(7.dp)
+                    .clip(CircleShape)
+                    .background(LiveMagenta),
+            )
+            Spacer(Modifier.width(7.dp))
+            Text(
+                "LIVE · TX.026",
+                color = LiveMagenta,
+                fontSize = 9.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 1.8.sp,
+            )
+            Spacer(Modifier.width(10.dp))
+            Box(
+                Modifier
+                    .height(10.dp)
+                    .width(1.dp)
+                    .background(InsaneColors.OnBgFaint),
+            )
+            Spacer(Modifier.width(10.dp))
+            Text(
+                "//  BEYOND  REALITY",
+                color = InsaneColors.OnBgDim,
+                fontSize = 9.sp,
+                letterSpacing = 1.6.sp,
+            )
+            Spacer(Modifier.weight(1f))
+            Box(
+                Modifier
+                    .size(34.dp)
+                    .background(InsaneColors.Accent.copy(alpha = 0.12f))
+                    .border(1.dp, InsaneColors.Accent.copy(alpha = 0.45f))
+                    .clickable(enabled = !state.refreshing, onClick = onRefresh),
+                contentAlignment = Alignment.Center,
+            ) {
                 if (state.refreshing) {
-                    CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.size(16.dp))
+                    CircularProgressIndicator(
+                        strokeWidth = 1.5.dp,
+                        color = InsaneColors.Accent,
+                        modifier = Modifier.size(14.dp),
+                    )
                 } else {
-                    Icon(Icons.Filled.Refresh, contentDescription = "Refresh", tint = InaseColors.Accent)
+                    Icon(
+                        Icons.Filled.Refresh,
+                        contentDescription = "Refresh",
+                        tint = InsaneColors.Accent,
+                        modifier = Modifier.size(16.dp),
+                    )
                 }
             }
         }
 
+        // ── Display title: massive italic slab "INSANE" + side metadata
+        Row(verticalAlignment = Alignment.Bottom) {
+            val accentSlab = InsaneColors.Accent
+            Text(
+                "INSANE",
+                color = InsaneColors.OnBg,
+                fontSize = 46.sp,
+                fontWeight = FontWeight.Black,
+                fontStyle = FontStyle.Italic,
+                letterSpacing = (-1.5).sp,
+                modifier = Modifier
+                    .drawBehind {
+                        val slabH = size.height * 0.18f
+                        val slabY = size.height * 0.58f
+                        drawRect(
+                            color = accentSlab.copy(alpha = 0.30f),
+                            topLeft = Offset(-2.dp.toPx(), slabY),
+                            size = Size(size.width + 4.dp.toPx(), slabH),
+                        )
+                    },
+            )
+            Spacer(Modifier.width(10.dp))
+            Column(Modifier.padding(bottom = 7.dp)) {
+                Text(
+                    "FESTIVAL",
+                    color = LiveMagenta,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 4.sp,
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    "✦ ED.026",
+                    color = InsaneColors.OnBgDim,
+                    fontSize = 10.sp,
+                    letterSpacing = 1.5.sp,
+                )
+            }
+        }
+
+        // ── Day selector: ticket-stub blocks with sharp edges
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             for (d in DayKey.entries) {
                 val active = d == day
-                Column(
+                val bg = if (active) InsaneColors.Accent else InsaneColors.TabInactiveBg
+                val labelColor = if (active) Color.White else InsaneColors.OnBg
+                val dateColor = if (active) Color.White.copy(alpha = 0.78f) else InsaneColors.OnBgDim
+                Box(
                     Modifier
                         .weight(1f)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(
-                            if (active) Color(0x33A78BFA) else Color(0x08FFFFFF)
-                        )
-                        .border(
-                            1.dp,
-                            if (active) InaseColors.Accent else InaseColors.Border,
-                            RoundedCornerShape(8.dp),
-                        )
-                        .clickable { onDayChange(d) }
-                        .padding(vertical = 6.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                        .height(56.dp)
+                        .background(bg)
+                        .border(1.dp, if (active) InsaneColors.Accent else InsaneColors.Border)
+                        .clickable { onDayChange(d) },
                 ) {
-                    Text(d.label, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                    Text(d.date, color = InaseColors.TextDim, fontSize = 9.sp)
+                    if (active) {
+                        Box(
+                            Modifier
+                                .align(Alignment.TopStart)
+                                .height(3.dp)
+                                .fillMaxWidth()
+                                .background(LiveMagenta),
+                        )
+                    }
+                    Column(
+                        Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 10.dp, vertical = 7.dp),
+                        verticalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text(
+                            d.label.uppercase(),
+                            color = labelColor,
+                            fontSize = 19.sp,
+                            fontWeight = FontWeight.Black,
+                            fontStyle = FontStyle.Italic,
+                            letterSpacing = 0.5.sp,
+                        )
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text(
+                                d.date,
+                                color = dateColor,
+                                fontSize = 9.5.sp,
+                                fontWeight = FontWeight.Medium,
+                                letterSpacing = 1.2.sp,
+                            )
+                            if (active) {
+                                Text(
+                                    "▸",
+                                    color = Color.White,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Black,
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
 
+        // ── Stage filters (square dot + caps label) + favourites counter
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             StageKey.entries.forEach { s ->
                 val meta = stageMeta.getValue(s)
                 val hidden = s in hiddenStages
                 Row(
                     Modifier
-                        .clip(RoundedCornerShape(999.dp))
-                        .border(
-                            1.dp,
-                            if (hidden) InaseColors.Border else meta.color,
-                            RoundedCornerShape(999.dp),
-                        )
                         .clickable { onToggleStage(s) }
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                        .padding(vertical = 2.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(5.dp),
                 ) {
                     Box(
                         Modifier
-                            .size(7.dp)
-                            .clip(CircleShape)
+                            .size(8.dp)
                             .background(if (hidden) Color.Transparent else meta.color)
-                            .border(1.dp, meta.color, CircleShape)
+                            .border(1.5.dp, if (hidden) meta.color.copy(alpha = 0.45f) else meta.color),
                     )
                     Text(
-                        meta.label,
-                        color = if (hidden) Color(0x4DFFFFFF) else meta.color,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
+                        meta.label.uppercase(),
+                        color = if (hidden) InsaneColors.OnBgFaint else InsaneColors.OnBg,
+                        fontSize = 9.5.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 1.4.sp,
                     )
                 }
             }
             Spacer(Modifier.weight(1f))
             Row(
                 Modifier
-                    .clip(RoundedCornerShape(999.dp))
-                    .background(if (favsOnly) Color(0x26FBBF24) else Color.Transparent)
-                    .border(1.dp, InaseColors.Star, RoundedCornerShape(999.dp))
+                    .background(if (favsOnly) InsaneColors.Star else Color.Transparent)
+                    .border(1.dp, InsaneColors.Star)
                     .clickable { onToggleFavsOnly() }
-                    .padding(horizontal = 9.dp, vertical = 4.dp),
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
             ) {
                 Icon(
                     if (favsOnly) Icons.Filled.Star else Icons.Outlined.StarBorder,
                     contentDescription = null,
-                    tint = InaseColors.Star,
-                    modifier = Modifier.size(11.dp),
+                    tint = if (favsOnly) Color.Black else InsaneColors.Star,
+                    modifier = Modifier.size(12.dp),
                 )
-                Text("$favCount", color = InaseColors.Star, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    favCount.toString().padStart(2, '0'),
+                    color = if (favsOnly) Color.Black else InsaneColors.Star,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 1.sp,
+                )
             }
         }
     }
@@ -295,7 +458,7 @@ private fun Timeline(
                         .padding(start = TIME_COL_WIDTH, top = (i * 60 * PX_PER_MIN).dp)
                         .fillMaxWidth()
                         .height(1.dp)
-                        .background(Color(0x0AFFFFFF))
+                        .background(InsaneColors.GridLine)
                 )
             }
 
@@ -305,7 +468,7 @@ private fun Timeline(
                     val h = (12 + i) % 24
                     Text(
                         text = "${h.toString().padStart(2, '0')}:00",
-                        color = Color(0x66FFFFFF),
+                        color = InsaneColors.OnBgSubtle,
                         fontSize = 9.5.sp,
                         modifier = Modifier
                             .offset(y = (i * 60 * PX_PER_MIN - 7).dp)
@@ -353,7 +516,7 @@ private fun StageColumn(
     Box(
         modifier
             .clip(RoundedCornerShape(4.dp))
-            .background(Color(0x04FFFFFF))
+            .background(InsaneColors.ColumnBg)
     ) {
         sets.forEach { set ->
             val durationMin = timeToMin(set.e) - timeToMin(set.s)
@@ -388,12 +551,12 @@ private fun StageColumn(
                 Column {
                     Text(
                         set.s,
-                        color = Color(0x8CFFFFFF),
+                        color = InsaneColors.OnBgTimeChip,
                         fontSize = 8.5.sp,
                     )
                     Text(
                         set.a,
-                        color = Color.White.copy(alpha = if (dimmed) 0.18f else 1f),
+                        color = InsaneColors.OnBg.copy(alpha = if (dimmed) 0.18f else 1f),
                         fontSize = if (height < 35.dp) 9.sp else if (height < 60.dp) 10.sp else 11.sp,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 3,
@@ -404,7 +567,7 @@ private fun StageColumn(
                     Icon(
                         Icons.Filled.Star,
                         contentDescription = null,
-                        tint = InaseColors.Star,
+                        tint = InsaneColors.Star,
                         modifier = Modifier.size(11.dp).align(Alignment.TopEnd),
                     )
                 }
@@ -425,11 +588,11 @@ private fun SourceBadge(state: LineupState, modifier: Modifier = Modifier) {
     Box(
         modifier
             .clip(RoundedCornerShape(999.dp))
-            .background(Color(0x33A78BFA))
-            .border(1.dp, Color(0x66A78BFA), RoundedCornerShape(999.dp))
+            .background(InsaneColors.Accent.copy(alpha = 0.2f))
+            .border(1.dp, InsaneColors.Accent.copy(alpha = 0.4f), RoundedCornerShape(999.dp))
             .padding(horizontal = 10.dp, vertical = 5.dp)
     ) {
-        Text(text, color = InaseColors.Accent, fontSize = 10.sp)
+        Text(text, color = InsaneColors.Accent, fontSize = 10.sp)
     }
 }
 
@@ -451,7 +614,7 @@ private fun DetailDialog(
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color(0x8C000000))
+            .background(InsaneColors.DialogScrim)
             .clickable(onClick = onDismiss),
         contentAlignment = Alignment.Center,
     ) {
@@ -459,7 +622,7 @@ private fun DetailDialog(
             Modifier
                 .padding(20.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .background(InaseColors.BgMid)
+                .background(InsaneColors.BgMid)
                 .border(1.dp, meta.color, RoundedCornerShape(16.dp))
                 .padding(22.dp)
                 .clickable(enabled = false) {},
@@ -469,16 +632,16 @@ private fun DetailDialog(
                 Box(Modifier.size(7.dp).clip(CircleShape).background(meta.color))
                 Text(meta.label.uppercase(), color = meta.color, fontSize = 10.sp, fontWeight = FontWeight.Bold)
             }
-            Text(set.a, color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
-            Text("${set.s} → ${set.e}", color = Color(0xD9FFFFFF), fontSize = 16.sp)
-            Text(day.full.uppercase(), color = Color(0x80FFFFFF), fontSize = 11.sp)
+            Text(set.a, color = InsaneColors.OnBg, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+            Text("${set.s} → ${set.e}", color = InsaneColors.OnBgEmphasis, fontSize = 16.sp)
+            Text(day.full.uppercase(), color = InsaneColors.OnBgDim, fontSize = 11.sp)
             Row(
                 Modifier
                     .fillMaxWidth()
                     .padding(top = 10.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(if (isFav) InaseColors.Star else Color.Transparent)
-                    .border(1.dp, InaseColors.Star, RoundedCornerShape(10.dp))
+                    .background(if (isFav) InsaneColors.Star else Color.Transparent)
+                    .border(1.dp, InsaneColors.Star, RoundedCornerShape(10.dp))
                     .clickable(onClick = onToggleFav)
                     .padding(vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -487,12 +650,12 @@ private fun DetailDialog(
                 Icon(
                     if (isFav) Icons.Filled.Star else Icons.Outlined.StarBorder,
                     contentDescription = null,
-                    tint = if (isFav) Color.Black else InaseColors.Star,
+                    tint = if (isFav) Color.Black else InsaneColors.Star,
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
                     if (isFav) "FAVORI" else "AJOUTER AUX FAVORIS",
-                    color = if (isFav) Color.Black else InaseColors.Star,
+                    color = if (isFav) Color.Black else InsaneColors.Star,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                 )
