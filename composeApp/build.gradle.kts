@@ -49,11 +49,14 @@ kotlin {
             implementation(libs.ktor.serialization.kotlinx.json)
 
             implementation(libs.multiplatform.settings)
+
+            implementation(libs.goquati.qr)
         }
 
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.okhttp)
+            implementation(libs.play.services.code.scanner)
         }
 
         iosMain.dependencies {

@@ -7,26 +7,33 @@ Tiny Kotlin Multiplatform read-only viewer for the Insane Festival lineup. Targe
 - On launch, instantly renders **cached** data (or **bundled** fallback on first run) so there is zero blocking on network.
 - In the background, fetches the latest lineup from Supabase and updates the cache.
 - Tap the ↻ icon to force-refresh.
-- Favorites are kept locally per device (same as the website's localStorage favorites).
+- **Favorites sync online** under an anonymous Supabase identity created on first launch.
+- **Friends**: tap the people icon to share a 6-character invite code (or QR), redeem one from a friend, and toggle each friend's favorites onto the timeline. See the friends-feature setup below.
 - No login. No edit mode.
 
 ## One-time setup
 
-### 1. Add an anon SELECT policy to `insane_lineup`
+### 1. Run the friends-feature migration
 
-The table currently has RLS enabled with no policies, so the public anon key reads nothing. Add this policy in the Supabase SQL editor:
+Paste `supabase/migrations/001_friends_feature.sql` into the Supabase SQL editor and run it. It is idempotent — safe to re-run after schema tweaks. It does:
 
-```sql
-create policy "anon read lineup"
-  on public.insane_lineup
-  for select
-  to anon
-  using (true);
-```
+- Creates the `insane` schema and **moves** `insane_lineup` into it (`alter table … set schema insane`).
+- Creates `profiles`, `favorites`, `friendships` tables (with RLS) in `insane`.
+- Creates `rotate_friend_code()` and `redeem_friend_code(text)` RPCs (security definer) in `insane`.
+- Adds a trigger that creates a profile row on every new auth user.
+- Adds an `authenticated`-role SELECT policy on `insane.insane_lineup` (the existing `anon` policy follows the table).
 
-This gives unauthenticated reads only — writes still require the service role key (used by the Next.js admin route).
+> **Heads-up for the Axl-Lvy admin route.** Because `insane_lineup` moves out of `public`, the Next.js admin route that writes lineup edits needs its Supabase client switched to the `insane` schema, e.g. `createClient(url, key, { db: { schema: 'insane' } })`. Until that change ships, lineup writes from the website will 404.
 
-### 2. Fill in `Config.kt`
+### 2. Enable anonymous sign-ins
+
+In the Supabase dashboard: **Authentication → Providers → Anonymous Sign-Ins → Enable**. The app calls `POST /auth/v1/signup` on first launch to mint a session — without this toggle every device gets stuck.
+
+### 3. Expose the `insane` schema to PostgREST
+
+All insane tables live in the `insane` schema. Supabase only proxies schemas that are explicitly listed: **Project Settings → API → Exposed schemas** → add `insane`. Without this every API call from the app returns 404.
+
+### 4. Fill in `Config.kt`
 
 Edit `composeApp/src/commonMain/kotlin/fr/axllvy/insane/Config.kt` with your project URL and anon key (same values as `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in the website's `.env`):
 
@@ -47,6 +54,8 @@ The anon key is safe to ship — it has no special privileges beyond what the po
 | iOS | open `iosApp/iosApp.xcodeproj` in Xcode and run on a simulator/device |
 
 iOS targets are disabled when building on Windows — that is expected. Use a Mac for iOS.
+
+`NSCameraUsageDescription` is already wired into `iosApp/iosApp/Info.plist` for the QR scanner.
 
 ### Web output
 

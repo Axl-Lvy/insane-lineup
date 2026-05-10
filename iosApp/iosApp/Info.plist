@@ -4,5 +4,7 @@
 <dict>
     <key>CADisableMinimumFrameDurationOnPhone</key>
     <true/>
+    <key>NSCameraUsageDescription</key>
+    <string>Insane uses your camera to scan a friend's invitation QR code.</string>
 </dict>
 </plist>

@@ -4,13 +4,17 @@
       "Bash(./gradlew.bat :composeApp:compileDebugKotlinAndroid --console=plain -q)",
       "Bash(./gradlew.bat :composeApp:compileDebugKotlinAndroid --console=plain)",
       "Bash(./gradlew.bat :composeApp:compileDebugKotlinAndroid --rerun-tasks --console=plain)",
-      "Bash(gh auth *)",
-      "Bash(git init *)",
-      "Bash(gh repo *)",
-      "Bash(./gradlew :composeApp:compileKotlinWasmJs)"
+      "Bash(xargs grep -l -i \"qr\\\\|barcode\\\\|scanner\")",
+      "Bash(xargs grep -l -i \"generateqr\\\\|qrcode.*generate\\\\|qrimage\")",
+      "Bash(xargs cat)",
+      "Bash(xargs grep -l \"BelZSpeedScanner\\\\|belzspeedscan\")",
+      "WebFetch(domain:supabase.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(./gradlew :composeApp:compileDebugKotlinAndroid)",
+      "Bash(./gradlew :composeApp:compileKotlinWasmJs)",
+      "Bash(./gradlew :composeApp:assembleDebug)",
+      "Bash(./gradlew :composeApp:compileDebugKotlinAndroid :composeApp:compileKotlinWasmJs)"
     ]
-  },
-  "enabledPlugins": {
-    "frontend-design@claude-plugins-official": true
   }
 }

@@ -13,7 +13,12 @@ object Config {
     const val LINEUP_TABLE: String = "insane_lineup"
     const val LINEUP_ROW_ID: Int = 1
 
-    // PostgREST schema the table lives in. The Supabase project defaults to
-    // "memor_chess" so we must override per-request via Accept-Profile.
-    const val LINEUP_SCHEMA: String = "public"
+    // All insane-related tables (lineup + friends feature) live in the
+    // `insane` schema. It must be in the project's "Exposed schemas" list
+    // (Supabase Project Settings → API) for PostgREST to proxy it.
+    const val INSANE_SCHEMA: String = "insane"
+
+    // Backwards-compat alias for the lineup client. Kept as a separate name
+    // so the lineup-vs-friends distinction stays explicit at the call site.
+    const val LINEUP_SCHEMA: String = INSANE_SCHEMA
 }

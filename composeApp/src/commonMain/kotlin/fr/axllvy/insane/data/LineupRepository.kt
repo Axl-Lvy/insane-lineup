@@ -1,6 +1,7 @@
 package fr.axllvy.insane.data
 
 import com.russhwolf.settings.Settings
+import fr.axllvy.insane.logE
 import fr.axllvy.insane.resources.Res
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -56,31 +57,47 @@ class LineupRepository(
     suspend fun refresh(now: () -> Long): RefreshOutcome {
         val current = _state.value
         if (current != null) _state.value = current.copy(refreshing = true, lastError = null)
-        println("[Insane] refresh start (current source=${current?.source})")
         return try {
             val fresh = client.fetchLineup()
             if (fresh != null) {
                 settings.putString(CACHE_KEY, serializeLineup(fresh))
                 settings.putLong(CACHE_AT_KEY, now())
                 _state.value = LineupState(fresh, LineupSource.Fresh)
-                println("[Insane] refresh OK: ${fresh.size} day(s)")
                 RefreshOutcome.Refreshed
             } else {
                 if (current != null) _state.value = current.copy(refreshing = false, lastError = "Empty response")
-                println("[Insane] refresh: client returned null lineup")
                 RefreshOutcome.Error("Empty response")
             }
         } catch (t: Throwable) {
             val offline = t.looksOffline()
-            val msg = t.message ?: "Network error"
-            println("[Insane] refresh threw ${t::class.simpleName}: $msg (offline=$offline)")
-            _state.value = current?.copy(
-                refreshing = false,
-                lastError = if (offline) "Offline" else msg,
-            )
-            if (offline) RefreshOutcome.Offline else RefreshOutcome.Error(msg)
+            // Full chain to console only — the UI just shows a terse label.
+            logE("refresh threw ${t::class.simpleName}: ${t.describeChain()} (offline=$offline)")
+            val short = if (offline) "Offline" else (t.message?.take(60) ?: t::class.simpleName.orEmpty())
+            _state.value = current?.copy(refreshing = false, lastError = short)
+            if (offline) RefreshOutcome.Offline else RefreshOutcome.Error(short)
         }
     }
+}
+
+/**
+ * Walks the exception chain so callers see the real reason. PostgREST puts
+ * useful info inside the response body — [LineupFetchException] forwards it
+ * into the message; the rest of the chain captures network-layer wrappers.
+ */
+private fun Throwable.describeChain(): String {
+    val parts = mutableListOf<String>()
+    var t: Throwable? = this
+    var depth = 0
+    while (t != null && depth < 4) {
+        val cls = t::class.simpleName.orEmpty()
+        val msg = t.message?.takeIf { it.isNotBlank() }
+        parts += if (msg != null) "$cls: $msg" else cls
+        val next = t.cause
+        if (next === t) break
+        t = next
+        depth++
+    }
+    return parts.joinToString(" ← ")
 }
 
 private fun Throwable.looksOffline(): Boolean {

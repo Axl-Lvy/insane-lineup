@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
@@ -42,12 +43,20 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import fr.axllvy.insane.data.DayKey
+import fr.axllvy.insane.data.FavoritesRepository
+import fr.axllvy.insane.data.FriendCode
+import fr.axllvy.insane.data.FriendsRepository
 import fr.axllvy.insane.data.LineupSource
 import fr.axllvy.insane.data.LineupState
 import fr.axllvy.insane.data.RefreshOutcome
 import fr.axllvy.insane.data.SetEntry
 import fr.axllvy.insane.data.StageKey
 import fr.axllvy.insane.data.timeToMin
+import fr.axllvy.insane.ui.friends.FriendsSheet
+import fr.axllvy.insane.ui.friends.FriendsSheetState
+import fr.axllvy.insane.ui.friends.QrCodeView
+import fr.axllvy.insane.ui.friends.QrScannerSheet
+import fr.axllvy.insane.ui.friends.friendColor
 import kotlinx.coroutines.launch
 
 private const val DAY_TOTAL_MIN = 16 * 60
@@ -57,15 +66,30 @@ private val TIME_COL_WIDTH = 38.dp
 private val HOUR_COUNT = 17
 
 @Composable
-fun LineupScreen(state: LineupState, onRefresh: suspend () -> RefreshOutcome) {
+fun LineupScreen(
+    state: LineupState,
+    favoritesRepo: FavoritesRepository,
+    friendsRepo: FriendsRepository,
+    onRefresh: suspend () -> RefreshOutcome,
+) {
+    val scope = rememberCoroutineScope()
     var day by rememberSaveable { mutableStateOf(DayKey.JEU) }
-    var favs by rememberSaveable { mutableStateOf(setOf<String>()) }
+    val favs by favoritesRepo.favorites.collectAsState()
     var favsOnly by rememberSaveable { mutableStateOf(false) }
     var hiddenStages by rememberSaveable { mutableStateOf(setOf<StageKey>()) }
     var selected by remember { mutableStateOf<String?>(null) }
 
+    var showFriends by remember { mutableStateOf(false) }
+    var showScanner by remember { mutableStateOf(false) }
+    var visibleFriends by rememberSaveable { mutableStateOf(setOf<String>()) }
+    var myCode by remember { mutableStateOf<FriendCode?>(null) }
+
+    val friends by friendsRepo.friends.collectAsState()
+    val myDisplayName by friendsRepo.myDisplayName.collectAsState()
+    val friendFavorites by friendsRepo.friendFavorites.collectAsState()
+
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
+
     val triggerRefresh: () -> Unit = {
         if (!state.refreshing) {
             scope.launch {
@@ -73,7 +97,7 @@ fun LineupScreen(state: LineupState, onRefresh: suspend () -> RefreshOutcome) {
                 val msg = when (outcome) {
                     RefreshOutcome.Refreshed -> "Lineup refreshed"
                     RefreshOutcome.Offline -> "You're offline"
-                    is RefreshOutcome.Error -> "Refresh failed: ${outcome.message}"
+                    is RefreshOutcome.Error -> "Refresh failed"
                 }
                 snackbarHostState.currentSnackbarData?.dismiss()
                 snackbarHostState.showSnackbar(msg)
@@ -95,6 +119,7 @@ fun LineupScreen(state: LineupState, onRefresh: suspend () -> RefreshOutcome) {
                 onToggleFavsOnly = { favsOnly = !favsOnly },
                 favCount = favs.size,
                 onRefresh = triggerRefresh,
+                onOpenFriends = { showFriends = true },
             )
 
             Timeline(
@@ -103,6 +128,8 @@ fun LineupScreen(state: LineupState, onRefresh: suspend () -> RefreshOutcome) {
                 hiddenStages = hiddenStages,
                 favs = favs,
                 favsOnly = favsOnly,
+                visibleFriends = visibleFriends,
+                friendFavorites = friendFavorites,
                 onSelect = { selected = it },
                 onRefresh = triggerRefresh,
                 modifier = Modifier.weight(1f),
@@ -129,8 +156,57 @@ fun LineupScreen(state: LineupState, onRefresh: suspend () -> RefreshOutcome) {
                 day = day,
                 state = state,
                 isFav = key in favs,
-                onToggleFav = { favs = if (key in favs) favs - key else favs + key },
+                onToggleFav = { scope.launch { favoritesRepo.toggle(key) } },
                 onDismiss = { selected = null },
+            )
+        }
+
+        if (showFriends) {
+            FriendsSheet(
+                state = FriendsSheetState(
+                    myDisplayName = myDisplayName,
+                    myCode = myCode,
+                    friends = friends,
+                    visibleFriendIds = visibleFriends,
+                ),
+                onClose = { showFriends = false },
+                onRotateCode = {
+                    val rotated = friendsRepo.rotateCode()
+                    if (rotated != null) myCode = rotated
+                    rotated
+                },
+                onRedeem = { code -> friendsRepo.redeem(code) },
+                onSetVisibility = { id, visible ->
+                    visibleFriends = if (visible) visibleFriends + id else visibleFriends - id
+                },
+                onUnfriend = { id ->
+                    friendsRepo.unfriend(id)
+                    visibleFriends = visibleFriends - id
+                },
+                onSetDisplayName = { name -> friendsRepo.setDisplayName(name) },
+                onLaunchScanner = { showScanner = true },
+                qrRenderer = { data, sizeDp -> QrCodeView(data = data, sizeDp = sizeDp) },
+            )
+        }
+
+        if (showScanner) {
+            QrScannerSheet(
+                onResult = { code ->
+                    showScanner = false
+                    if (code != null) {
+                        scope.launch {
+                            val result = friendsRepo.redeem(code)
+                            snackbarHostState.showSnackbar(
+                                when (result) {
+                                    is fr.axllvy.insane.data.RedeemResult.Added ->
+                                        "Added ${result.friend.displayName ?: "friend"}"
+                                    is fr.axllvy.insane.data.RedeemResult.Failed -> result.message
+                                }
+                            )
+                        }
+                    }
+                },
+                onDismiss = { showScanner = false },
             )
         }
     }
@@ -154,6 +230,7 @@ private fun Header(
     onToggleFavsOnly: () -> Unit,
     favCount: Int,
     onRefresh: () -> Unit,
+    onOpenFriends: () -> Unit,
 ) {
     val pulse by rememberInfiniteTransition(label = "header-pulse").animateFloat(
         initialValue = 0.35f,
@@ -202,7 +279,7 @@ private fun Header(
             .padding(start = 14.dp, end = 12.dp, top = 12.dp, bottom = 14.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        // ── Status bar: live indicator + transmission tag + refresh
+        // ── Status bar: live indicator + transmission tag + friends + refresh
         Row(
             Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -237,29 +314,23 @@ private fun Header(
                 letterSpacing = 1.6.sp,
             )
             Spacer(Modifier.weight(1f))
-            Box(
-                Modifier
-                    .size(34.dp)
-                    .background(InsaneColors.Accent.copy(alpha = 0.12f))
-                    .border(1.dp, InsaneColors.Accent.copy(alpha = 0.45f))
-                    .clickable(enabled = !state.refreshing, onClick = onRefresh),
-                contentAlignment = Alignment.Center,
-            ) {
-                if (state.refreshing) {
-                    CircularProgressIndicator(
-                        strokeWidth = 1.5.dp,
-                        color = InsaneColors.Accent,
-                        modifier = Modifier.size(14.dp),
-                    )
-                } else {
-                    Icon(
-                        Icons.Filled.Refresh,
-                        contentDescription = "Refresh",
-                        tint = InsaneColors.Accent,
-                        modifier = Modifier.size(16.dp),
-                    )
-                }
-            }
+            HeaderIconButton(
+                icon = { tint -> Icon(Icons.Filled.People, contentDescription = "Friends", tint = tint, modifier = Modifier.size(16.dp)) },
+                enabled = true,
+                onClick = onOpenFriends,
+            )
+            Spacer(Modifier.width(8.dp))
+            HeaderIconButton(
+                icon = { tint ->
+                    if (state.refreshing) {
+                        CircularProgressIndicator(strokeWidth = 1.5.dp, color = tint, modifier = Modifier.size(14.dp))
+                    } else {
+                        Icon(Icons.Filled.Refresh, contentDescription = "Refresh", tint = tint, modifier = Modifier.size(16.dp))
+                    }
+                },
+                enabled = !state.refreshing,
+                onClick = onRefresh,
+            )
         }
 
         // ── Display title: massive italic slab "INSANE" + side metadata
@@ -424,6 +495,25 @@ private fun Header(
     }
 }
 
+@Composable
+private fun HeaderIconButton(
+    icon: @Composable (Color) -> Unit,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    val tint = InsaneColors.Accent
+    Box(
+        Modifier
+            .size(34.dp)
+            .background(tint.copy(alpha = 0.12f))
+            .border(1.dp, tint.copy(alpha = 0.45f))
+            .clickable(enabled = enabled, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        icon(tint)
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Timeline(
@@ -432,6 +522,8 @@ private fun Timeline(
     hiddenStages: Set<StageKey>,
     favs: Set<String>,
     favsOnly: Boolean,
+    visibleFriends: Set<String>,
+    friendFavorites: Map<String, Set<String>>,
     onSelect: (String) -> Unit,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
@@ -492,6 +584,8 @@ private fun Timeline(
                         day = day,
                         favs = favs,
                         favsOnly = favsOnly,
+                        visibleFriends = visibleFriends,
+                        friendFavorites = friendFavorites,
                         onSelect = onSelect,
                         modifier = Modifier.weight(1f).fillMaxHeight(),
                     )
@@ -509,6 +603,8 @@ private fun StageColumn(
     day: DayKey,
     favs: Set<String>,
     favsOnly: Boolean,
+    visibleFriends: Set<String>,
+    friendFavorites: Map<String, Set<String>>,
     onSelect: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -527,27 +623,49 @@ private fun StageColumn(
             val key = "${day.id}|${stage.name}|${set.s}|${set.a}"
             val isFav = key in favs
             val dimmed = favsOnly && !isFav
+            val friendsWhoLikeIt = visibleFriends.filter { (friendFavorites[it] ?: emptySet()).contains(key) }
 
+            val hasFriendInterest = friendsWhoLikeIt.isNotEmpty()
+            val baseBg = if (isFav) meta.color.copy(alpha = 0.22f)
+                         else meta.color.copy(alpha = 0.12f)
             Box(
                 Modifier
                     .padding(top = top + 2.dp, start = 2.dp, end = 2.dp)
                     .height(barHeight)
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(4.dp))
-                    .background(
-                        if (isFav)
-                            meta.color.copy(alpha = 0.22f)
-                        else
-                            meta.color.copy(alpha = 0.12f)
-                    )
+                    .background(baseBg)
                     .border(
-                        width = 2.dp,
-                        color = meta.color.copy(alpha = if (dimmed) 0.18f else 1f),
+                        width = if (hasFriendInterest) 2.dp else 2.dp,
+                        color = if (hasFriendInterest && !dimmed)
+                                    friendColor(friendsWhoLikeIt.first())
+                                else
+                                    meta.color.copy(alpha = if (dimmed) 0.18f else 1f),
                         shape = RoundedCornerShape(topStart = 0.dp, bottomStart = 0.dp, topEnd = 4.dp, bottomEnd = 4.dp),
                     )
                     .clickable { onSelect(key) }
                     .padding(horizontal = 5.dp, vertical = 4.dp),
             ) {
+                // Top edge stripe — one segment per visible friend who favorited this set.
+                // Reads at a glance ("Camille and Théo are going") without hiding the artist name.
+                if (hasFriendInterest) {
+                    Row(
+                        Modifier
+                            .align(Alignment.TopStart)
+                            .offset(y = (-4).dp, x = (-5).dp)
+                            .fillMaxWidth()
+                            .height(3.dp),
+                    ) {
+                        friendsWhoLikeIt.take(4).forEach { id ->
+                            Box(
+                                Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .background(friendColor(id))
+                            )
+                        }
+                    }
+                }
                 Column {
                     Text(
                         set.s,
