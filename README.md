@@ -26,7 +26,7 @@ Paste `supabase/migrations/001_friends_feature.sql` into the Supabase SQL editor
 > **Heads-up for the Axl-Lvy admin route.** Because `insane_lineup` moves out of `public`, the Next.js admin route that writes lineup edits needs its Supabase client switched to the `insane` schema, e.g. `createClient(url, key, { db: { schema: 'insane' } })`. Until that change ships, lineup writes from the website will 404.
 
 ### 2. Enable anonymous sign-ins
-
+  
 In the Supabase dashboard: **Authentication → Providers → Anonymous Sign-Ins → Enable**. The app calls `POST /auth/v1/signup` on first launch to mint a session — without this toggle every device gets stuck.
 
 ### 3. Expose the `insane` schema to PostgREST
