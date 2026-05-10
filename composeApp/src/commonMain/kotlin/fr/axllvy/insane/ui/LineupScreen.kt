@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -57,7 +58,10 @@ import fr.axllvy.insane.ui.friends.FriendsSheetState
 import fr.axllvy.insane.ui.friends.QrCodeView
 import fr.axllvy.insane.ui.friends.QrScannerSheet
 import fr.axllvy.insane.ui.friends.friendColor
+import fr.axllvy.insane.resources.Res
+import fr.axllvy.insane.resources.logo
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
 
 private const val DAY_TOTAL_MIN = 16 * 60
 private val PX_PER_MIN = 1.6f
@@ -335,6 +339,12 @@ private fun Header(
 
         // ── Display title: massive italic slab "INSANE" + side metadata
         Row(verticalAlignment = Alignment.Bottom) {
+            Image(
+                painter = painterResource(Res.drawable.logo),
+                contentDescription = null,
+                modifier = Modifier.size(54.dp).padding(bottom = 4.dp),
+            )
+            Spacer(Modifier.width(8.dp))
             val accentSlab = InsaneColors.Accent
             Text(
                 "INSANE",
