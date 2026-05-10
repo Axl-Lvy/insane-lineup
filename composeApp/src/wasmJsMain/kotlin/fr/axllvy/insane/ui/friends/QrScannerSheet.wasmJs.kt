@@ -25,7 +25,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import fr.axllvy.insane.resources.Res
+import fr.axllvy.insane.resources.general_ok
+import fr.axllvy.insane.resources.scanner_web_message
+import fr.axllvy.insane.resources.scanner_web_title
 import fr.axllvy.insane.ui.InsaneColors
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Web QR scanning is intentionally not implemented yet — it would require
@@ -64,14 +69,14 @@ actual fun QrScannerSheet(
                 modifier = Modifier.size(40.dp),
             )
             Text(
-                "SCAN ON MOBILE",
+                stringResource(Res.string.scanner_web_title),
                 color = InsaneColors.Accent,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Black,
                 letterSpacing = 1.8.sp,
             )
             Text(
-                "QR scanning isn't available in the web build yet. Open the app on your phone, or type the 6-character code your friend shared.",
+                stringResource(Res.string.scanner_web_message),
                 color = InsaneColors.OnBgDim,
                 fontSize = 12.sp,
             )
@@ -86,7 +91,7 @@ actual fun QrScannerSheet(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    "OK",
+                    stringResource(Res.string.general_ok),
                     color = Color.Black,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Black,

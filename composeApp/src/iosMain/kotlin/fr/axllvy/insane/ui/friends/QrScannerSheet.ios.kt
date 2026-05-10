@@ -27,7 +27,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.UIKitViewController
+import fr.axllvy.insane.resources.Res
+import fr.axllvy.insane.resources.cd_close
+import fr.axllvy.insane.resources.scanner_title
 import kotlinx.cinterop.ExperimentalForeignApi
+import org.jetbrains.compose.resources.stringResource
 import platform.AVFoundation.AVCaptureDevice
 import platform.AVFoundation.AVCaptureDeviceInput
 import platform.AVFoundation.AVCaptureMetadataOutput
@@ -67,7 +71,7 @@ actual fun QrScannerSheet(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
-                "SCAN A FRIEND CODE",
+                stringResource(Res.string.scanner_title),
                 color = Color.White,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Black,
@@ -80,7 +84,7 @@ actual fun QrScannerSheet(
                     .clickable(onClick = onDismiss),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.Filled.Close, contentDescription = "Close", tint = Color.White)
+                Icon(Icons.Filled.Close, contentDescription = stringResource(Res.string.cd_close), tint = Color.White)
             }
         }
         UIKitViewController(

@@ -29,10 +29,15 @@ import fr.axllvy.insane.data.LineupState
 import fr.axllvy.insane.data.RedeemResult
 import fr.axllvy.insane.data.RefreshOutcome
 import fr.axllvy.insane.data.StageKey
+import fr.axllvy.insane.notifications.EnableResult
+import fr.axllvy.insane.notifications.NotificationsController
 import fr.axllvy.insane.resources.Res
 import fr.axllvy.insane.resources.snackbar_friend_added
 import fr.axllvy.insane.resources.snackbar_friend_added_default
 import fr.axllvy.insane.resources.snackbar_lineup_refreshed
+import fr.axllvy.insane.resources.snackbar_notifications_denied
+import fr.axllvy.insane.resources.snackbar_notifications_disabled
+import fr.axllvy.insane.resources.snackbar_notifications_enabled
 import fr.axllvy.insane.resources.snackbar_offline
 import fr.axllvy.insane.resources.snackbar_refresh_failed
 import fr.axllvy.insane.ui.friends.FriendsSheet
@@ -50,11 +55,13 @@ fun LineupScreen(
     state: LineupState,
     favoritesRepo: FavoritesRepository,
     friendsRepo: FriendsRepository,
+    notifications: NotificationsController,
     onRefresh: suspend () -> RefreshOutcome,
 ) {
     val scope = rememberCoroutineScope()
     var day by rememberSaveable { mutableStateOf(DayKey.JEU) }
     val favs by favoritesRepo.favorites.collectAsState()
+    val notificationsEnabled by notifications.enabled.collectAsState()
     var favsOnly by rememberSaveable { mutableStateOf(false) }
     var hiddenStages by rememberSaveable { mutableStateOf(setOf<StageKey>()) }
     var selected by remember { mutableStateOf<String?>(null) }
@@ -84,6 +91,22 @@ fun LineupScreen(
         }
     }
 
+    val toggleNotifications: () -> Unit = {
+        scope.launch {
+            val msg = if (notificationsEnabled) {
+                notifications.disable()
+                getString(Res.string.snackbar_notifications_disabled)
+            } else {
+                when (notifications.enable()) {
+                    EnableResult.Enabled -> getString(Res.string.snackbar_notifications_enabled)
+                    EnableResult.PermissionDenied -> getString(Res.string.snackbar_notifications_denied)
+                }
+            }
+            snackbarHostState.currentSnackbarData?.dismiss()
+            snackbarHostState.showSnackbar(msg)
+        }
+    }
+
     Box(Modifier.fillMaxSize().background(verticalGradient())) {
         Column(Modifier.fillMaxSize().statusBarsPadding()) {
             Header(
@@ -97,6 +120,8 @@ fun LineupScreen(
                 favsOnly = favsOnly,
                 onToggleFavsOnly = { favsOnly = !favsOnly },
                 favCount = favs.size,
+                notificationsEnabled = notificationsEnabled,
+                onToggleNotifications = toggleNotifications,
                 onRefresh = triggerRefresh,
                 onOpenFriends = { showFriends = true },
             )

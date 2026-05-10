@@ -35,10 +35,32 @@ import fr.axllvy.insane.data.Friend
 import fr.axllvy.insane.data.FriendCode
 import fr.axllvy.insane.data.RedeemResult
 import fr.axllvy.insane.nowMs
+import fr.axllvy.insane.resources.Res
+import fr.axllvy.insane.resources.cd_close
+import fr.axllvy.insane.resources.cd_remove_friend
+import fr.axllvy.insane.resources.cd_scan_qr
+import fr.axllvy.insane.resources.friends_add_friend_label
+import fr.axllvy.insane.resources.friends_btn_add
+import fr.axllvy.insane.resources.friends_btn_generate
+import fr.axllvy.insane.resources.friends_btn_rotate
+import fr.axllvy.insane.resources.friends_code_expired
+import fr.axllvy.insane.resources.friends_code_expires_in
+import fr.axllvy.insane.resources.friends_code_placeholder
+import fr.axllvy.insane.resources.friends_count_label
+import fr.axllvy.insane.resources.friends_empty_state
+import fr.axllvy.insane.resources.friends_generate_help
+import fr.axllvy.insane.resources.friends_my_invite_code
+import fr.axllvy.insane.resources.friends_title
+import fr.axllvy.insane.resources.friends_visibility_off
+import fr.axllvy.insane.resources.friends_visibility_on
+import fr.axllvy.insane.resources.snackbar_friend_added
+import fr.axllvy.insane.resources.snackbar_friend_added_default
 import fr.axllvy.insane.ui.InsaneColors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.max
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Friends bottom-sheet-style overlay. Sections:
@@ -107,7 +129,11 @@ fun FriendsSheet(
                         scope.launch {
                             val result = onRedeem(code)
                             redeemFeedback = when (result) {
-                                is RedeemResult.Added -> "Added ${result.friend.displayName ?: "a friend"}"
+                                is RedeemResult.Added -> getString(
+                                    Res.string.snackbar_friend_added,
+                                    result.friend.displayName
+                                        ?: getString(Res.string.snackbar_friend_added_default),
+                                )
                                 is RedeemResult.Failed -> result.message
                             }
                         }
@@ -119,7 +145,10 @@ fun FriendsSheet(
             )
 
             Text(
-                "FRIENDS · ${state.friends.size.toString().padStart(2, '0')}",
+                stringResource(
+                    Res.string.friends_count_label,
+                    state.friends.size.toString().padStart(2, '0'),
+                ),
                 color = InsaneColors.OnBgDim,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Black,
@@ -166,7 +195,7 @@ private data class DisplayNameDialogState(val then: () -> Unit)
 private fun FriendsHeader(onClose: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
-            "FRIENDS",
+            stringResource(Res.string.friends_title),
             color = InsaneColors.OnBg,
             fontSize = 22.sp,
             fontWeight = FontWeight.Black,
@@ -182,7 +211,7 @@ private fun FriendsHeader(onClose: () -> Unit) {
         ) {
             Icon(
                 Icons.Filled.Close,
-                contentDescription = "Close",
+                contentDescription = stringResource(Res.string.cd_close),
                 tint = InsaneColors.OnBgDim,
             )
         }
@@ -214,7 +243,7 @@ private fun MyCodeSection(
             )
             Spacer(Modifier.width(6.dp))
             Text(
-                "MY INVITE CODE",
+                stringResource(Res.string.friends_my_invite_code),
                 color = InsaneColors.OnBgDim,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Black,
@@ -238,7 +267,7 @@ private fun MyCodeSection(
                     )
                     Spacer(Modifier.width(4.dp))
                     Text(
-                        if (code == null) "GENERATE" else "ROTATE",
+                        stringResource(if (code == null) Res.string.friends_btn_generate else Res.string.friends_btn_rotate),
                         color = InsaneColors.Accent,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Black,
@@ -250,7 +279,7 @@ private fun MyCodeSection(
 
         if (code == null) {
             Text(
-                "Tap GENERATE to create a 6-character code valid for 10 minutes. Share it or your QR with a friend to add them.",
+                stringResource(Res.string.friends_generate_help),
                 color = InsaneColors.OnBgDim,
                 fontSize = 12.sp,
             )
@@ -274,8 +303,8 @@ private fun MyCodeSection(
                     val secs = (ttlSec % 60).toString().padStart(2, '0')
                     val expiredColor = if (ttlSec <= 0) InsaneColors.Warn else InsaneColors.OnBgDim
                     Text(
-                        if (ttlSec <= 0) "EXPIRED · ROTATE FOR A NEW CODE"
-                        else "EXPIRES IN $mins:$secs",
+                        if (ttlSec <= 0) stringResource(Res.string.friends_code_expired)
+                        else stringResource(Res.string.friends_code_expires_in, mins, secs),
                         color = expiredColor,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Black,
@@ -317,7 +346,7 @@ private fun AddFriendSection(
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Text(
-            "ADD A FRIEND",
+            stringResource(Res.string.friends_add_friend_label),
             color = InsaneColors.OnBgDim,
             fontSize = 10.sp,
             fontWeight = FontWeight.Black,
@@ -332,7 +361,7 @@ private fun AddFriendSection(
                 onValueChange = { v ->
                     input = v.uppercase().filter { it.isLetterOrDigit() }.take(6)
                 },
-                placeholder = { Text("ABC123", letterSpacing = 4.sp, color = InsaneColors.OnBgFaint) },
+                placeholder = { Text(stringResource(Res.string.friends_code_placeholder), letterSpacing = 4.sp, color = InsaneColors.OnBgFaint) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.Characters,
@@ -360,7 +389,7 @@ private fun AddFriendSection(
             ) {
                 Icon(
                     Icons.Filled.QrCodeScanner,
-                    contentDescription = "Scan QR",
+                    contentDescription = stringResource(Res.string.cd_scan_qr),
                     tint = InsaneColors.Accent,
                 )
             }
@@ -378,7 +407,7 @@ private fun AddFriendSection(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                "ADD FRIEND",
+                stringResource(Res.string.friends_btn_add),
                 color = if (input.length == 6) Color.Black else InsaneColors.OnBgDim,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Black,
@@ -413,7 +442,7 @@ private fun FriendsList(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                "No friends yet. Share your code or scan one to get started.",
+                stringResource(Res.string.friends_empty_state),
                 color = InsaneColors.OnBgDim,
                 fontSize = 12.sp,
             )
@@ -469,7 +498,7 @@ private fun FriendRow(
             modifier = Modifier.weight(1f),
         )
         Text(
-            if (isVisible) "ON" else "OFF",
+            stringResource(if (isVisible) Res.string.friends_visibility_on else Res.string.friends_visibility_off),
             color = if (isVisible) color else InsaneColors.OnBgDim,
             fontSize = 9.sp,
             fontWeight = FontWeight.Black,
@@ -484,7 +513,7 @@ private fun FriendRow(
         ) {
             Icon(
                 Icons.Filled.Close,
-                contentDescription = "Remove friend",
+                contentDescription = stringResource(Res.string.cd_remove_friend),
                 tint = InsaneColors.OnBgFaint,
                 modifier = Modifier.size(14.dp),
             )

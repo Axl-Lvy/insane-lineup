@@ -35,6 +35,7 @@ import fr.axllvy.insane.resources.Res
 import fr.axllvy.insane.resources.detail_add_to_favorites
 import fr.axllvy.insane.resources.detail_favorite_active
 import fr.axllvy.insane.ui.InsaneColors
+import fr.axllvy.insane.ui.dayFullLabel
 import fr.axllvy.insane.ui.stageMeta
 import org.jetbrains.compose.resources.stringResource
 
@@ -79,7 +80,7 @@ internal fun DetailDialog(
             }
             Text(set.a, color = InsaneColors.OnBg, fontSize = 28.sp, fontWeight = FontWeight.Bold)
             Text("${set.s} → ${set.e}", color = InsaneColors.OnBgEmphasis, fontSize = 16.sp)
-            Text(day.full.uppercase(), color = InsaneColors.OnBgDim, fontSize = 11.sp)
+            Text(dayFullLabel(day).uppercase(), color = InsaneColors.OnBgDim, fontSize = 11.sp)
             Row(
                 Modifier
                     .fillMaxWidth()

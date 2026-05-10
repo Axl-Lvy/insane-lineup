@@ -4,10 +4,10 @@ import kotlinx.serialization.Serializable
 
 enum class StageKey { MIRAGE, CLOUD, ALTF4, TECHNOBUS }
 
-enum class DayKey(val id: String, val label: String, val date: String, val full: String) {
-    JEU("jeu", "Jeu", "14 mai", "Jeudi 14 mai"),
-    VEN("ven", "Ven", "15 mai", "Vendredi 15 mai"),
-    SAM("sam", "Sam", "16 mai", "Samedi 16 mai");
+enum class DayKey(val id: String) {
+    JEU("jeu"),
+    VEN("ven"),
+    SAM("sam");
 
     companion object {
         fun fromId(id: String): DayKey? = entries.firstOrNull { it.id == id }

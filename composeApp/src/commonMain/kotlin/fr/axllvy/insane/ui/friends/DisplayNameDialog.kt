@@ -30,7 +30,14 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import fr.axllvy.insane.resources.Res
+import fr.axllvy.insane.resources.display_name_description
+import fr.axllvy.insane.resources.display_name_placeholder
+import fr.axllvy.insane.resources.display_name_title
+import fr.axllvy.insane.resources.general_cancel
+import fr.axllvy.insane.resources.general_save
 import fr.axllvy.insane.ui.InsaneColors
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * One-shot prompt that appears the first time a user shares or redeems a code.
@@ -62,14 +69,14 @@ fun DisplayNameDialog(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                "PICK A NAME",
+                stringResource(Res.string.display_name_title),
                 color = InsaneColors.Accent,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Black,
                 letterSpacing = 1.8.sp,
             )
             Text(
-                "Your friends see this above your favorites. You can change it later.",
+                stringResource(Res.string.display_name_description),
                 color = InsaneColors.OnBgDim,
                 fontSize = 12.sp,
             )
@@ -77,7 +84,7 @@ fun DisplayNameDialog(
                 value = name,
                 onValueChange = { name = it.take(40) },
                 singleLine = true,
-                placeholder = { Text("e.g. Camille", color = InsaneColors.OnBgFaint) },
+                placeholder = { Text(stringResource(Res.string.display_name_placeholder), color = InsaneColors.OnBgFaint) },
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 colors = TextFieldDefaults.colors(
                     focusedTextColor = InsaneColors.OnBg,
@@ -96,7 +103,7 @@ fun DisplayNameDialog(
                         .clip(RoundedCornerShape(8.dp))
                         .clickable(onClick = onDismiss)
                         .padding(horizontal = 14.dp, vertical = 8.dp),
-                ) { Text("CANCEL", color = InsaneColors.OnBgDim, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.4.sp) }
+                ) { Text(stringResource(Res.string.general_cancel), color = InsaneColors.OnBgDim, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.4.sp) }
                 Spacer(Modifier.width(8.dp))
                 Box(
                     Modifier
@@ -106,7 +113,7 @@ fun DisplayNameDialog(
                         .padding(horizontal = 14.dp, vertical = 8.dp),
                 ) {
                     Text(
-                        "SAVE",
+                        stringResource(Res.string.general_save),
                         color = if (name.isNotBlank()) Color.Black else InsaneColors.OnBgDim,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Black,

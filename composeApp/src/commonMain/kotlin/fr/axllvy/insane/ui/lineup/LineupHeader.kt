@@ -22,9 +22,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.NotificationsNone
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -50,9 +52,12 @@ import fr.axllvy.insane.data.LineupState
 import fr.axllvy.insane.data.StageKey
 import fr.axllvy.insane.resources.Res
 import fr.axllvy.insane.resources.cd_friends
+import fr.axllvy.insane.resources.cd_notifications
 import fr.axllvy.insane.resources.cd_refresh
 import fr.axllvy.insane.resources.logo
 import fr.axllvy.insane.ui.InsaneColors
+import fr.axllvy.insane.ui.dayDateLabel
+import fr.axllvy.insane.ui.dayShortLabel
 import fr.axllvy.insane.ui.stageMeta
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -69,6 +74,8 @@ internal fun Header(
     favsOnly: Boolean,
     onToggleFavsOnly: () -> Unit,
     favCount: Int,
+    notificationsEnabled: Boolean,
+    onToggleNotifications: () -> Unit,
     onRefresh: () -> Unit,
     onOpenFriends: () -> Unit,
 ) {
@@ -84,6 +91,8 @@ internal fun Header(
     ) {
         StatusBar(
             refreshing = state.refreshing,
+            notificationsEnabled = notificationsEnabled,
+            onToggleNotifications = onToggleNotifications,
             onRefresh = onRefresh,
             onOpenFriends = onOpenFriends,
         )
@@ -134,6 +143,8 @@ private fun DrawScope.drawHeaderBackground(
 @Composable
 private fun StatusBar(
     refreshing: Boolean,
+    notificationsEnabled: Boolean,
+    onToggleNotifications: () -> Unit,
     onRefresh: () -> Unit,
     onOpenFriends: () -> Unit,
 ) {
@@ -182,6 +193,21 @@ private fun StatusBar(
         Spacer(Modifier.weight(1f))
         val friendsCd = stringResource(Res.string.cd_friends)
         val refreshCd = stringResource(Res.string.cd_refresh)
+        val notificationsCd = stringResource(Res.string.cd_notifications)
+        HeaderIconButton(
+            icon = { tint ->
+                Icon(
+                    if (notificationsEnabled) Icons.Filled.Notifications else Icons.Outlined.NotificationsNone,
+                    contentDescription = notificationsCd,
+                    tint = tint,
+                    modifier = Modifier.size(16.dp),
+                )
+            },
+            enabled = true,
+            active = notificationsEnabled,
+            onClick = onToggleNotifications,
+        )
+        Spacer(Modifier.width(8.dp))
         HeaderIconButton(
             icon = { tint -> Icon(Icons.Filled.People, contentDescription = friendsCd, tint = tint, modifier = Modifier.size(16.dp)) },
             enabled = true,
@@ -281,7 +307,7 @@ private fun DaySelector(day: DayKey, onDayChange: (DayKey) -> Unit) {
                     verticalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Text(
-                        d.label.uppercase(),
+                        dayShortLabel(d).uppercase(),
                         color = labelColor,
                         fontSize = 19.sp,
                         fontWeight = FontWeight.Black,
@@ -294,7 +320,7 @@ private fun DaySelector(day: DayKey, onDayChange: (DayKey) -> Unit) {
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Text(
-                            d.date,
+                            dayDateLabel(d),
                             color = dateColor,
                             fontSize = 9.5.sp,
                             fontWeight = FontWeight.Medium,
@@ -384,13 +410,14 @@ private fun HeaderIconButton(
     icon: @Composable (Color) -> Unit,
     enabled: Boolean,
     onClick: () -> Unit,
+    active: Boolean = false,
 ) {
     val tint = InsaneColors.Accent
     Box(
         Modifier
             .size(34.dp)
-            .background(tint.copy(alpha = 0.12f))
-            .border(1.dp, tint.copy(alpha = 0.45f))
+            .background(tint.copy(alpha = if (active) 0.32f else 0.12f))
+            .border(1.dp, tint.copy(alpha = if (active) 0.85f else 0.45f))
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {

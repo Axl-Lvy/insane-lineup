@@ -1,0 +1,73 @@
+<resources>
+  <!-- General -->
+  <string name="general_ok">OK</string>
+  <string name="general_cancel">CANCEL</string>
+  <string name="general_save">SAVE</string>
+
+  <!-- Snackbar -->
+  <string name="snackbar_lineup_refreshed">Lineup refreshed</string>
+  <string name="snackbar_offline">You\'re offline</string>
+  <string name="snackbar_refresh_failed">Refresh failed</string>
+  <string name="snackbar_friend_added">Added %1$s</string>
+  <string name="snackbar_friend_added_default">friend</string>
+
+  <!-- Snackbar (notifications) -->
+  <string name="snackbar_notifications_enabled">Notifications on</string>
+  <string name="snackbar_notifications_disabled">Notifications off</string>
+  <string name="snackbar_notifications_denied">Permission denied — enable notifications in system settings</string>
+
+  <!-- Notifications -->
+  <string name="notification_body_starts_soon">Starts in 10 min · %1$s</string>
+  <string name="notification_channel_name">Favorite sets</string>
+  <string name="notification_channel_description">Reminder 10 minutes before each favorite set</string>
+
+  <!-- Days -->
+  <string name="day_jeu_short">Thu</string>
+  <string name="day_ven_short">Fri</string>
+  <string name="day_sam_short">Sat</string>
+  <string name="day_jeu_date">May 14</string>
+  <string name="day_ven_date">May 15</string>
+  <string name="day_sam_date">May 16</string>
+  <string name="day_jeu_full">Thursday May 14</string>
+  <string name="day_ven_full">Friday May 15</string>
+  <string name="day_sam_full">Saturday May 16</string>
+
+  <!-- Content descriptions -->
+  <string name="cd_friends">Friends</string>
+  <string name="cd_refresh">Refresh</string>
+  <string name="cd_close">Close</string>
+  <string name="cd_scan_qr">Scan QR</string>
+  <string name="cd_remove_friend">Remove friend</string>
+  <string name="cd_qr_code">QR code for %1$s</string>
+  <string name="cd_notifications">Notifications</string>
+
+  <!-- Lineup detail dialog -->
+  <string name="detail_favorite_active">FAVORITE</string>
+  <string name="detail_add_to_favorites">ADD TO FAVORITES</string>
+
+  <!-- Friends sheet -->
+  <string name="friends_title">FRIENDS</string>
+  <string name="friends_count_label">FRIENDS · %1$s</string>
+  <string name="friends_my_invite_code">MY INVITE CODE</string>
+  <string name="friends_btn_generate">GENERATE</string>
+  <string name="friends_btn_rotate">ROTATE</string>
+  <string name="friends_generate_help">Tap GENERATE to create a 6-character code valid for 10 minutes. Share it or your QR with a friend to add them.</string>
+  <string name="friends_code_expired">EXPIRED · ROTATE FOR A NEW CODE</string>
+  <string name="friends_code_expires_in">EXPIRES IN %1$s:%2$s</string>
+  <string name="friends_add_friend_label">ADD A FRIEND</string>
+  <string name="friends_code_placeholder">ABC123</string>
+  <string name="friends_btn_add">ADD FRIEND</string>
+  <string name="friends_empty_state">No friends yet. Share your code or scan one to get started.</string>
+  <string name="friends_visibility_on">ON</string>
+  <string name="friends_visibility_off">OFF</string>
+
+  <!-- Display name dialog -->
+  <string name="display_name_title">PICK A NAME</string>
+  <string name="display_name_description">Your friends see this above your favorites. You can change it later.</string>
+  <string name="display_name_placeholder">e.g. Camille</string>
+
+  <!-- QR Scanner -->
+  <string name="scanner_title">SCAN A FRIEND CODE</string>
+  <string name="scanner_web_title">SCAN ON MOBILE</string>
+  <string name="scanner_web_message">QR scanning isn\'t available in the web build yet. Open the app on your phone, or type the 6-character code your friend shared.</string>
+</resources>
