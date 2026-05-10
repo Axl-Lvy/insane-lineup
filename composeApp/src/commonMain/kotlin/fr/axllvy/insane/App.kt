@@ -39,8 +39,9 @@ fun App() {
             .onFailure { logE("auth bootstrap failed: ${it.message}") }
 
         deps.lineup.loadInitial()
+        deps.favorites.loadFromCache()
         deps.lineup.refresh(::nowMs)
-        runCatching { deps.favorites.load() }
+        runCatching { deps.favorites.sync() }
         runCatching { deps.friends.loadAll() }
     }
 
@@ -63,7 +64,11 @@ fun App() {
                 favoritesRepo = deps.favorites,
                 friendsRepo = deps.friends,
                 notifications = deps.notifications,
-                onRefresh = { deps.lineup.refresh(::nowMs) },
+                onRefresh = {
+                    val outcome = deps.lineup.refresh(::nowMs)
+                    runCatching { deps.favorites.sync() }
+                    outcome
+                },
             )
         }
     }
@@ -86,7 +91,7 @@ private fun buildDependencies(): AppDependencies {
         client = SupabaseLineupClient(http, session),
         settings = settings,
     )
-    val favorites = FavoritesRepository(http, session)
+    val favorites = FavoritesRepository(http, session, settings)
     val friends = FriendsRepository(http, session, ::nowMs)
     val notifications = NotificationsController(
         scheduler = createNotificationScheduler(),
