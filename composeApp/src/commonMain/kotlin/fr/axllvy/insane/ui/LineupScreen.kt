@@ -47,7 +47,6 @@ import fr.axllvy.insane.data.DayKey
 import fr.axllvy.insane.data.FavoritesRepository
 import fr.axllvy.insane.data.FriendCode
 import fr.axllvy.insane.data.FriendsRepository
-import fr.axllvy.insane.data.LineupSource
 import fr.axllvy.insane.data.LineupState
 import fr.axllvy.insane.data.RefreshOutcome
 import fr.axllvy.insane.data.SetEntry
@@ -139,8 +138,6 @@ fun LineupScreen(
                 modifier = Modifier.weight(1f),
             )
         }
-
-        SourceBadge(state = state, modifier = Modifier.align(Alignment.BottomEnd).padding(12.dp))
 
         SnackbarHost(
             hostState = snackbarHostState,
@@ -701,26 +698,6 @@ private fun StageColumn(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun SourceBadge(state: LineupState, modifier: Modifier = Modifier) {
-    val text = when (state.source) {
-        LineupSource.Bundled -> "Bundled · tap ↻ to refresh"
-        is LineupSource.Cached -> if (state.lastError != null)
-            "Cached · ${state.lastError}"
-        else "Cached · tap ↻ to refresh"
-        LineupSource.Fresh -> "Up to date"
-    }
-    Box(
-        modifier
-            .clip(RoundedCornerShape(999.dp))
-            .background(InsaneColors.Accent.copy(alpha = 0.2f))
-            .border(1.dp, InsaneColors.Accent.copy(alpha = 0.4f), RoundedCornerShape(999.dp))
-            .padding(horizontal = 10.dp, vertical = 5.dp)
-    ) {
-        Text(text, color = InsaneColors.Accent, fontSize = 10.sp)
     }
 }
 
