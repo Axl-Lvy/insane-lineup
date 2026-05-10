@@ -9,3 +9,5 @@ xcuserdata/
 *.xcuserstate
 node_modules/
 kotlin-js-store/
+/keystore/
+/composeApp/release/
