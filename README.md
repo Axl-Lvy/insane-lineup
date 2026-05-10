@@ -1,6 +1,6 @@
 # insane-lineup
 
-Tiny Kotlin Multiplatform read-only viewer for the Insane Festival lineup. Targets Android, iOS, and the Web (Compose for Wasm). Connects directly to the Supabase `insane_lineup` table for refreshes, caches the result locally, and works completely offline.
+Kotlin Multiplatform read-only viewer for the Insane Festival lineup. Targets Android, iOS, and the Web (Compose for Wasm). Connects directly to the Supabase `insane_lineup` table for refreshes, caches the result locally, and works completely offline.
 
 ## What it does
 
