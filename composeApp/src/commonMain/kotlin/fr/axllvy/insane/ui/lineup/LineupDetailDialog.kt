@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import fr.axllvy.insane.data.DayKey
 import fr.axllvy.insane.data.LineupState
 import fr.axllvy.insane.data.StageKey
+import fr.axllvy.insane.data.splitArtists
 import fr.axllvy.insane.resources.Res
 import fr.axllvy.insane.resources.detail_add_to_favorites
 import fr.axllvy.insane.resources.detail_fav_count_none
@@ -74,6 +75,7 @@ internal fun DetailDialog(
                 .padding(22.dp)
                 .clickable(enabled = false) {},
             verticalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -82,6 +84,7 @@ internal fun DetailDialog(
                 Box(Modifier.size(7.dp).clip(CircleShape).background(meta.color))
                 Text(meta.label.uppercase(), color = meta.color, fontSize = 10.sp, fontWeight = FontWeight.Bold)
             }
+            ArtistAvatarRow(artists = splitArtists(set.a), accent = meta.color)
             Text(set.a, color = InsaneColors.OnBg, fontSize = 28.sp, fontWeight = FontWeight.Bold)
             Text("${set.s} → ${set.e}", color = InsaneColors.OnBgEmphasis, fontSize = 16.sp)
             Text(dayFullLabel(day).uppercase(), color = InsaneColors.OnBgDim, fontSize = 11.sp)

@@ -1,0 +1,3 @@
+# Per-run output of fetch_artist_images.py / verify_artist_links.py.
+# Useful locally for spot-checking SoundCloud matches; not for the repo.
+_*.json

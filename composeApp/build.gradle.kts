@@ -53,6 +53,9 @@ kotlin {
             implementation(libs.multiplatform.settings)
 
             implementation(libs.qrose)
+
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor3)
         }
 
         androidMain.dependencies {
