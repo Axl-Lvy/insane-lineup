@@ -46,12 +46,12 @@ The anon key is safe to ship — it has no special privileges beyond what the po
 
 ## Build & run
 
-| Target | Command |
-| --- | --- |
-| Android (debug install) | `./gradlew :composeApp:installDebug` |
-| Web dev server | `./gradlew :composeApp:wasmJsBrowserDevelopmentRun` |
-| Web production bundle | `./gradlew :composeApp:wasmJsBrowserDistribution` |
-| iOS | open `iosApp/iosApp.xcodeproj` in Xcode and run on a simulator/device |
+| Target                  | Command                                                               |
+|-------------------------|-----------------------------------------------------------------------|
+| Android (debug install) | `./gradlew :composeApp:installDebug`                                  |
+| Web dev server          | `./gradlew :composeApp:wasmJsBrowserDevelopmentRun`                   |
+| Web production bundle   | `./gradlew :composeApp:wasmJsBrowserDistribution`                     |
+| iOS                     | open `iosApp/iosApp.xcodeproj` in Xcode and run on a simulator/device |
 
 iOS targets are disabled when building on Windows — that is expected. Use a Mac for iOS.
 

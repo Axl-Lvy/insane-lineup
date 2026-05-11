@@ -10,6 +10,7 @@ import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,6 +29,7 @@ import fr.axllvy.insane.data.FriendsRepository
 import fr.axllvy.insane.data.LineupState
 import fr.axllvy.insane.data.RedeemResult
 import fr.axllvy.insane.data.RefreshOutcome
+import fr.axllvy.insane.data.SearchIndex
 import fr.axllvy.insane.data.StageKey
 import fr.axllvy.insane.notifications.EnableResult
 import fr.axllvy.insane.notifications.NotificationsController
@@ -46,7 +48,9 @@ import fr.axllvy.insane.ui.friends.QrCodeView
 import fr.axllvy.insane.ui.friends.QrScannerSheet
 import fr.axllvy.insane.ui.lineup.DetailDialog
 import fr.axllvy.insane.ui.lineup.Header
+import fr.axllvy.insane.ui.lineup.LineupSearchSheet
 import fr.axllvy.insane.ui.lineup.Timeline
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 
@@ -68,7 +72,17 @@ fun LineupScreen(
     var selected by remember { mutableStateOf<String?>(null) }
 
     var showFriends by remember { mutableStateOf(false) }
+    var showSearch by remember { mutableStateOf(false) }
     var showScanner by remember { mutableStateOf(false) }
+    var highlightKey by remember { mutableStateOf<String?>(null) }
+    val searchIndex = remember(state.lineup) { SearchIndex.build(state.lineup) }
+
+    LaunchedEffect(highlightKey) {
+        if (highlightKey != null) {
+            delay(4500)
+            highlightKey = null
+        }
+    }
     var visibleFriends by rememberSaveable { mutableStateOf(setOf<String>()) }
     var myCode by remember { mutableStateOf<FriendCode?>(null) }
 
@@ -125,6 +139,7 @@ fun LineupScreen(
                 onToggleNotifications = toggleNotifications,
                 onRefresh = triggerRefresh,
                 onOpenFriends = { showFriends = true },
+                onOpenSearch = { showSearch = true },
             )
 
             Timeline(
@@ -138,6 +153,7 @@ fun LineupScreen(
                 friendFavorites = friendFavorites,
                 onSelect = { selected = it },
                 onRefresh = triggerRefresh,
+                highlightKey = highlightKey,
                 modifier = Modifier.weight(1f),
             )
         }
@@ -163,6 +179,18 @@ fun LineupScreen(
                 favCount = favCounts[key] ?: 0,
                 onToggleFav = { scope.launch { favoritesRepo.toggle(key) } },
                 onDismiss = { selected = null },
+            )
+        }
+
+        if (showSearch) {
+            LineupSearchSheet(
+                index = searchIndex,
+                onResult = { match ->
+                    day = match.day
+                    highlightKey = match.key()
+                    showSearch = false
+                },
+                onClose = { showSearch = false },
             )
         }
 

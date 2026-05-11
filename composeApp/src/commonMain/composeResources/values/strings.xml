@@ -40,6 +40,13 @@
   <string name="cd_remove_friend">Remove friend</string>
   <string name="cd_qr_code">QR code for %1$s</string>
   <string name="cd_notifications">Notifications</string>
+  <string name="cd_search">Search</string>
+
+  <!-- Search sheet -->
+  <string name="search_title">SEARCH</string>
+  <string name="search_placeholder">Artist name</string>
+  <string name="search_empty_prompt">Type an artist name to find when and where they play.</string>
+  <string name="search_empty_no_match">No artist matches.</string>
 
   <!-- Lineup detail dialog -->
   <string name="detail_favorite_active">FAVORITE</string>

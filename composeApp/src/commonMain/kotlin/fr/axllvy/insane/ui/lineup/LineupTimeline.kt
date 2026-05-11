@@ -1,5 +1,7 @@
 package fr.axllvy.insane.ui.lineup
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,13 +26,20 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 import fr.axllvy.insane.data.DayKey
 import fr.axllvy.insane.data.LineupState
 import fr.axllvy.insane.data.SetEntry
@@ -60,10 +69,25 @@ internal fun Timeline(
     friendFavorites: Map<String, Set<String>>,
     onSelect: (String) -> Unit,
     onRefresh: () -> Unit,
+    highlightKey: String? = null,
     modifier: Modifier = Modifier,
 ) {
     val visibleStages = StageKey.entries.filterNot { it in hiddenStages }
     val dayData = state.lineup[day].orEmpty()
+    val scrollState = rememberScrollState()
+    val density = LocalDensity.current
+
+    LaunchedEffect(highlightKey, day) {
+        val k = highlightKey ?: return@LaunchedEffect
+        val parts = k.split("|", limit = 4)
+        if (parts.size < 3 || parts[0] != day.id) return@LaunchedEffect
+        val stage = runCatching { StageKey.valueOf(parts[1]) }.getOrNull() ?: return@LaunchedEffect
+        val start = parts[2]
+        val set = dayData[stage]?.firstOrNull { it.s == start } ?: return@LaunchedEffect
+        val targetDp = (timeToMin(set.s) * PX_PER_MIN).dp - 24.dp
+        val target = with(density) { targetDp.toPx() }.toInt().coerceAtLeast(0)
+        scrollState.animateScrollTo(target)
+    }
 
     PullToRefreshBox(
         isRefreshing = state.refreshing,
@@ -73,7 +97,7 @@ internal fun Timeline(
         Box(
             Modifier
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
                 .padding(horizontal = 8.dp, vertical = 12.dp),
         ) {
             Box(Modifier.fillMaxWidth().height(TIMELINE_HEIGHT + 24.dp)) {
@@ -97,6 +121,7 @@ internal fun Timeline(
                             visibleFriends = visibleFriends,
                             friendFavorites = friendFavorites,
                             onSelect = onSelect,
+                            highlightKey = highlightKey,
                             modifier = Modifier.weight(1f).fillMaxHeight(),
                         )
                     }
@@ -145,6 +170,7 @@ private fun StageColumn(
     visibleFriends: Set<String>,
     friendFavorites: Map<String, Set<String>>,
     onSelect: (String) -> Unit,
+    highlightKey: String?,
     modifier: Modifier = Modifier,
 ) {
     val meta = stageMeta.getValue(stage)
@@ -166,11 +192,32 @@ private fun StageColumn(
             val hasFriendInterest = friendsWhoLikeIt.isNotEmpty()
             val favCount = favCounts[key] ?: 0
 
-            val baseBg = meta.color.copy(alpha = if (isFav) 0.22f else 0.12f)
-            val borderColor = when {
+            val isHighlight = key == highlightKey
+            val normalBg = meta.color.copy(alpha = if (isFav) 0.22f else 0.12f)
+            val normalBorder = when {
                 hasFriendInterest && !dimmed -> friendColor(friendsWhoLikeIt.first())
                 else -> meta.color.copy(alpha = if (dimmed) 0.18f else 1f)
             }
+            val starColor = InsaneColors.Star
+            val highlightBg = starColor.copy(alpha = 0.30f)
+            val highlightAnim = remember { Animatable(0f) }
+            LaunchedEffect(highlightKey) {
+                if (!isHighlight) {
+                    highlightAnim.snapTo(0f)
+                    return@LaunchedEffect
+                }
+                highlightAnim.snapTo(1f)
+                repeat(4) {
+                    highlightAnim.animateTo(0.25f, tween(170))
+                    highlightAnim.animateTo(1f, tween(170))
+                }
+                delay(2000)
+                highlightAnim.animateTo(0f, tween(1000))
+            }
+            val t = highlightAnim.value
+            val borderColor = if (t > 0f) lerp(normalBorder, starColor, t) else normalBorder
+            val borderWidth = if (t > 0f) lerp(2.dp, 3.dp, t) else 2.dp
+            val baseBg = if (t > 0f) lerp(normalBg, highlightBg, t) else normalBg
             Box(
                 Modifier
                     .padding(top = top + 2.dp, start = 2.dp, end = 2.dp)
@@ -178,7 +225,7 @@ private fun StageColumn(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(4.dp))
                     .background(baseBg)
-                    .border(2.dp, borderColor, RoundedCornerShape(4.dp))
+                    .border(borderWidth, borderColor, RoundedCornerShape(4.dp))
                     .clickable { onSelect(key) }
                     .padding(horizontal = 5.dp, vertical = 4.dp),
             ) {

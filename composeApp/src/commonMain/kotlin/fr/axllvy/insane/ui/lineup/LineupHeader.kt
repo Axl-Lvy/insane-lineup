@@ -25,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.NotificationsNone
 import androidx.compose.material.icons.outlined.StarBorder
@@ -54,6 +55,7 @@ import fr.axllvy.insane.resources.Res
 import fr.axllvy.insane.resources.cd_friends
 import fr.axllvy.insane.resources.cd_notifications
 import fr.axllvy.insane.resources.cd_refresh
+import fr.axllvy.insane.resources.cd_search
 import fr.axllvy.insane.resources.logo
 import fr.axllvy.insane.ui.InsaneColors
 import fr.axllvy.insane.ui.dayDateLabel
@@ -78,6 +80,7 @@ internal fun Header(
     onToggleNotifications: () -> Unit,
     onRefresh: () -> Unit,
     onOpenFriends: () -> Unit,
+    onOpenSearch: () -> Unit,
 ) {
     val headerBg = InsaneColors.HeaderBg
     val accent = InsaneColors.Accent
@@ -95,6 +98,7 @@ internal fun Header(
             onToggleNotifications = onToggleNotifications,
             onRefresh = onRefresh,
             onOpenFriends = onOpenFriends,
+            onOpenSearch = onOpenSearch,
         )
         TitleRow()
         DaySelector(day = day, onDayChange = onDayChange)
@@ -147,6 +151,7 @@ private fun StatusBar(
     onToggleNotifications: () -> Unit,
     onRefresh: () -> Unit,
     onOpenFriends: () -> Unit,
+    onOpenSearch: () -> Unit,
 ) {
     val pulse by rememberInfiniteTransition(label = "header-pulse").animateFloat(
         initialValue = 0.35f,
@@ -194,6 +199,7 @@ private fun StatusBar(
         val friendsCd = stringResource(Res.string.cd_friends)
         val refreshCd = stringResource(Res.string.cd_refresh)
         val notificationsCd = stringResource(Res.string.cd_notifications)
+        val searchCd = stringResource(Res.string.cd_search)
         HeaderIconButton(
             icon = { tint ->
                 Icon(
@@ -206,6 +212,12 @@ private fun StatusBar(
             enabled = true,
             active = notificationsEnabled,
             onClick = onToggleNotifications,
+        )
+        Spacer(Modifier.width(8.dp))
+        HeaderIconButton(
+            icon = { tint -> Icon(Icons.Filled.Search, contentDescription = searchCd, tint = tint, modifier = Modifier.size(16.dp)) },
+            enabled = true,
+            onClick = onOpenSearch,
         )
         Spacer(Modifier.width(8.dp))
         HeaderIconButton(
