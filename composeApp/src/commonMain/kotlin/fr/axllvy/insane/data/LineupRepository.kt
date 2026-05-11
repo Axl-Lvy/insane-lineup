@@ -54,6 +54,17 @@ class LineupRepository(private val client: SupabaseLineupClient, private val set
         }
     }
 
+    /**
+     * Push a new lineup to Supabase and reflect it locally. Throws on REST error so callers can
+     * show a precise message. Cache + state are only mutated after a successful round-trip.
+     */
+    suspend fun save(lineup: Lineup, now: () -> Long) {
+        client.updateLineup(lineup)
+        settings.putString(CACHE_KEY, serializeLineup(lineup))
+        settings.putLong(CACHE_AT_KEY, now())
+        _state.value = LineupState(lineup, LineupSource.Fresh)
+    }
+
     /** Try to fetch from Supabase; on success update state + cache, on failure keep current. */
     suspend fun refresh(now: () -> Long): RefreshOutcome {
         val current = _state.value

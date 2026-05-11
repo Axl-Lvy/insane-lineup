@@ -9,6 +9,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,6 +35,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -81,6 +83,7 @@ internal fun Header(
     onRefresh: () -> Unit,
     onOpenFriends: () -> Unit,
     onOpenSearch: () -> Unit,
+    onLogoTap: () -> Unit = {},
 ) {
     val headerBg = InsaneColors.HeaderBg
     val accent = InsaneColors.Accent
@@ -99,7 +102,7 @@ internal fun Header(
             onOpenFriends = onOpenFriends,
             onOpenSearch = onOpenSearch,
         )
-        TitleRow()
+        TitleRow(onLogoTap = onLogoTap)
         DaySelector(day = day, onDayChange = onDayChange)
         StageFilters(
             hiddenStages = hiddenStages,
@@ -247,12 +250,19 @@ private fun StatusBar(
 }
 
 @Composable
-private fun TitleRow() {
+private fun TitleRow(onLogoTap: () -> Unit) {
     Row(verticalAlignment = Alignment.Bottom) {
         Image(
             painter = painterResource(Res.drawable.logo),
             contentDescription = null,
-            modifier = Modifier.size(54.dp).padding(bottom = 4.dp),
+            modifier =
+                Modifier.size(54.dp)
+                    .padding(bottom = 4.dp)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = onLogoTap,
+                    ),
         )
         Spacer(Modifier.width(8.dp))
         val accentSlab = InsaneColors.Accent

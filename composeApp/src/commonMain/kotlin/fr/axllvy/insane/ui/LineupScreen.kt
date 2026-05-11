@@ -33,6 +33,7 @@ import fr.axllvy.insane.data.SearchIndex
 import fr.axllvy.insane.data.StageKey
 import fr.axllvy.insane.notifications.EnableResult
 import fr.axllvy.insane.notifications.NotificationsController
+import fr.axllvy.insane.nowMs
 import fr.axllvy.insane.resources.Res
 import fr.axllvy.insane.resources.snackbar_friend_added
 import fr.axllvy.insane.resources.snackbar_friend_added_default
@@ -61,6 +62,7 @@ fun LineupScreen(
     friendsRepo: FriendsRepository,
     notifications: NotificationsController,
     onRefresh: suspend () -> RefreshOutcome,
+    onAdminUnlock: () -> Boolean = { false },
 ) {
     val scope = rememberCoroutineScope()
     var day by rememberSaveable { mutableStateOf(DayKey.JEU) }
@@ -91,6 +93,19 @@ fun LineupScreen(
     val friendFavorites by friendsRepo.friendFavorites.collectAsState()
 
     val snackbarHostState = remember { SnackbarHostState() }
+
+    // Hidden admin unlock: 7 logo taps within 3 s. Counter resets on long gap.
+    var tapCount by remember { mutableStateOf(0) }
+    var lastTapMs by remember { mutableStateOf(0L) }
+    val onLogoTap: () -> Unit = {
+        val now = nowMs()
+        tapCount = if (now - lastTapMs > 3000L) 1 else tapCount + 1
+        lastTapMs = now
+        if (tapCount >= 7) {
+            tapCount = 0
+            onAdminUnlock()
+        }
+    }
 
     val triggerRefresh: () -> Unit = {
         if (!state.refreshing) {
@@ -143,6 +158,7 @@ fun LineupScreen(
                 onRefresh = triggerRefresh,
                 onOpenFriends = { showFriends = true },
                 onOpenSearch = { showSearch = true },
+                onLogoTap = onLogoTap,
             )
 
             Timeline(

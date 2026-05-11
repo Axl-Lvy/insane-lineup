@@ -9,15 +9,18 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import coil3.ImageLoader
 import coil3.compose.setSingletonImageLoaderFactory
 import coil3.network.ktor3.KtorNetworkFetcherFactory
 import coil3.request.crossfade
+import fr.axllvy.insane.data.AdminController
 import fr.axllvy.insane.data.ArtistImages
 import fr.axllvy.insane.data.FavoritesRepository
 import fr.axllvy.insane.data.FriendsRepository
@@ -31,7 +34,9 @@ import fr.axllvy.insane.notifications.createNotificationScheduler
 import fr.axllvy.insane.ui.InsaneColors
 import fr.axllvy.insane.ui.InsaneTheme
 import fr.axllvy.insane.ui.LineupScreen
+import fr.axllvy.insane.ui.admin.AdminScreen
 import io.github.jan.supabase.auth.auth
+import kotlinx.coroutines.launch
 
 @Composable
 fun App() {
@@ -66,6 +71,7 @@ fun App() {
         runCatching { deps.favorites.sync() }
         runCatching { deps.favorites.loadCounts() }
         runCatching { deps.friends.loadAll() }
+        runCatching { deps.admin.refresh() }
     }
 
     LaunchedEffect(deps.notifications) {
@@ -74,6 +80,9 @@ fun App() {
 
     // Manifest is a tiny (~6 kB) bundled JSON; load once at startup.
     val artistImages by produceState(ArtistImages.Empty) { value = ArtistImages.load() }
+
+    val isAdmin by deps.admin.isAdmin.collectAsState()
+    var showAdmin by remember { mutableStateOf(false) }
 
     InsaneTheme {
         CompositionLocalProvider(LocalArtistImages provides artistImages) {
@@ -85,6 +94,12 @@ fun App() {
                 ) {
                     CircularProgressIndicator(color = InsaneColors.Accent)
                 }
+            } else if (showAdmin && isAdmin) {
+                AdminScreen(
+                    initial = current.lineup,
+                    onSave = { edited -> deps.lineup.save(edited, ::nowMs) },
+                    onClose = { showAdmin = false },
+                )
             } else {
                 LineupScreen(
                     state = current,
@@ -96,6 +111,15 @@ fun App() {
                         runCatching { deps.favorites.sync() }
                         runCatching { deps.favorites.loadCounts() }
                         outcome
+                    },
+                    onAdminUnlock = {
+                        if (isAdmin) {
+                            showAdmin = true
+                            true
+                        } else {
+                            scope.launch { deps.admin.refresh() }
+                            false
+                        }
                     },
                 )
             }
@@ -109,6 +133,7 @@ private class AppDependencies(
     val favorites: FavoritesRepository,
     val friends: FriendsRepository,
     val notifications: NotificationsController,
+    val admin: AdminController,
 )
 
 private fun buildDependencies(): AppDependencies {
@@ -123,7 +148,8 @@ private fun buildDependencies(): AppDependencies {
             settings = settings,
             nowMs = ::nowMs,
         )
-    return AppDependencies(supabase, lineup, favorites, friends, notifications)
+    val admin = AdminController(supabase)
+    return AppDependencies(supabase, lineup, favorites, friends, notifications, admin)
 }
 
 expect fun nowMs(): Long
