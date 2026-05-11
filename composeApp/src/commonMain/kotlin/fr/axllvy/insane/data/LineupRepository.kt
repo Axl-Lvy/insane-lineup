@@ -14,7 +14,9 @@ private const val FALLBACK_RESOURCE = "files/lineup_fallback.json"
 
 sealed interface LineupSource {
     data object Bundled : LineupSource
+
     data class Cached(val cachedAtMs: Long) : LineupSource
+
     data object Fresh : LineupSource
 }
 
@@ -27,15 +29,14 @@ data class LineupState(
 
 sealed interface RefreshOutcome {
     data object Refreshed : RefreshOutcome
+
     data object Offline : RefreshOutcome
+
     data class Error(val message: String) : RefreshOutcome
 }
 
 @OptIn(ExperimentalResourceApi::class)
-class LineupRepository(
-    private val client: SupabaseLineupClient,
-    private val settings: Settings,
-) {
+class LineupRepository(private val client: SupabaseLineupClient, private val settings: Settings) {
     private val _state = MutableStateFlow<LineupState?>(null)
     val state: StateFlow<LineupState?> = _state.asStateFlow()
 
@@ -65,14 +66,16 @@ class LineupRepository(
                 _state.value = LineupState(fresh, LineupSource.Fresh)
                 RefreshOutcome.Refreshed
             } else {
-                if (current != null) _state.value = current.copy(refreshing = false, lastError = "Empty response")
+                if (current != null)
+                    _state.value = current.copy(refreshing = false, lastError = "Empty response")
                 RefreshOutcome.Error("Empty response")
             }
         } catch (t: Throwable) {
             val offline = t.looksOffline()
             // Full chain to console only — the UI just shows a terse label.
             logE("refresh threw ${t::class.simpleName}: ${t.describeChain()} (offline=$offline)")
-            val short = if (offline) "Offline" else (t.message?.take(60) ?: t::class.simpleName.orEmpty())
+            val short =
+                if (offline) "Offline" else (t.message?.take(60) ?: t::class.simpleName.orEmpty())
             _state.value = current?.copy(refreshing = false, lastError = short)
             if (offline) RefreshOutcome.Offline else RefreshOutcome.Error(short)
         }
@@ -80,9 +83,9 @@ class LineupRepository(
 }
 
 /**
- * Walks the exception chain so callers see the real reason. PostgREST puts
- * useful info inside the response body — [LineupFetchException] forwards it
- * into the message; the rest of the chain captures network-layer wrappers.
+ * Walks the exception chain so callers see the real reason. PostgREST puts useful info inside the
+ * response body — [LineupFetchException] forwards it into the message; the rest of the chain
+ * captures network-layer wrappers.
  */
 private fun Throwable.describeChain(): String {
     val parts = mutableListOf<String>()
@@ -120,4 +123,3 @@ private fun Throwable.looksOffline(): Boolean {
         "connection refused" in s ||
         "failed to connect" in s
 }
-

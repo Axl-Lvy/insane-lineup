@@ -4,10 +4,11 @@ actual fun createNotificationScheduler(): NotificationScheduler = NoopNotificati
 
 private object NoopNotificationScheduler : NotificationScheduler {
     override suspend fun isPermissionGranted(): Boolean = false
+
     override suspend fun requestPermission(): PermissionResult = PermissionResult.Unavailable
-    override suspend fun replaceAll(
-        items: List<ScheduledNotification>,
-        channel: ChannelMetadata,
-    ) = Unit
+
+    override suspend fun replaceAll(items: List<ScheduledNotification>, channel: ChannelMetadata) =
+        Unit
+
     override suspend fun cancelAll() = Unit
 }

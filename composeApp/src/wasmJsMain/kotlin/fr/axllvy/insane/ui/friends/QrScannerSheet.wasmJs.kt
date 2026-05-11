@@ -33,27 +33,19 @@ import fr.axllvy.insane.ui.InsaneColors
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * Web QR scanning is intentionally not implemented yet — it would require
- * pulling in jsQR (or `BarcodeDetector` where available) plus a getUserMedia
- * stream + canvas pipeline. Instead, the web build asks the user to type the
- * code directly. The "Add a friend" section already supports that path, so
- * this is just a graceful fallback rather than a blocker.
+ * Web QR scanning is intentionally not implemented yet — it would require pulling in jsQR (or
+ * `BarcodeDetector` where available) plus a getUserMedia stream + canvas pipeline. Instead, the web
+ * build asks the user to type the code directly. The "Add a friend" section already supports that
+ * path, so this is just a graceful fallback rather than a blocker.
  */
 @Composable
-actual fun QrScannerSheet(
-    onResult: (String?) -> Unit,
-    onDismiss: () -> Unit,
-) {
+actual fun QrScannerSheet(onResult: (String?) -> Unit, onDismiss: () -> Unit) {
     Box(
-        Modifier
-            .fillMaxSize()
-            .background(InsaneColors.DialogScrim)
-            .clickable(onClick = onDismiss),
+        Modifier.fillMaxSize().background(InsaneColors.DialogScrim).clickable(onClick = onDismiss),
         contentAlignment = Alignment.Center,
     ) {
         Column(
-            Modifier
-                .padding(24.dp)
+            Modifier.padding(24.dp)
                 .clip(RoundedCornerShape(14.dp))
                 .background(InsaneColors.BgMid)
                 .border(1.dp, InsaneColors.Accent, RoundedCornerShape(14.dp))
@@ -82,8 +74,7 @@ actual fun QrScannerSheet(
             )
             Spacer(Modifier.height(4.dp))
             Box(
-                Modifier
-                    .fillMaxWidth()
+                Modifier.fillMaxWidth()
                     .clip(RoundedCornerShape(8.dp))
                     .background(InsaneColors.Accent)
                     .clickable(onClick = onDismiss)

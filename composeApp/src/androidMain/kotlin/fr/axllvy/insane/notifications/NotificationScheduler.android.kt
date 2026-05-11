@@ -20,21 +20,18 @@ private const val SCHEDULED_IDS_KEY = "scheduled_notification_ids_v1"
 actual fun createNotificationScheduler(): NotificationScheduler =
     AndroidNotificationScheduler(InsaneApplication.appContext)
 
-private class AndroidNotificationScheduler(
-    private val context: Context,
-) : NotificationScheduler {
+private class AndroidNotificationScheduler(private val context: Context) : NotificationScheduler {
 
     private val alarms = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-    private val store: Settings = SharedPreferencesSettings(
-        context.getSharedPreferences("insane.notifications", Context.MODE_PRIVATE),
-    )
+    private val store: Settings =
+        SharedPreferencesSettings(
+            context.getSharedPreferences("insane.notifications", Context.MODE_PRIVATE)
+        )
 
     override suspend fun isPermissionGranted(): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return true
-        return ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.POST_NOTIFICATIONS,
-        ) == PackageManager.PERMISSION_GRANTED
+        return ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
     }
 
     override suspend fun requestPermission(): PermissionResult {
@@ -43,10 +40,7 @@ private class AndroidNotificationScheduler(
         return AndroidPermissionRequester.request()
     }
 
-    override suspend fun replaceAll(
-        items: List<ScheduledNotification>,
-        channel: ChannelMetadata,
-    ) {
+    override suspend fun replaceAll(items: List<ScheduledNotification>, channel: ChannelMetadata) {
         ensureChannel(channel)
         cancelAll()
         for (item in items) {
@@ -54,27 +48,23 @@ private class AndroidNotificationScheduler(
             // setAndAllowWhileIdle: doesn't require SCHEDULE_EXACT_ALARM. Can be
             // delayed by a few minutes inside Doze, but during a festival the
             // device is rarely idle, and we'd rather avoid the prompt.
-            alarms.setAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                item.fireAtEpochMs,
-                intent,
-            )
+            alarms.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, item.fireAtEpochMs, intent)
         }
         store.putString(SCHEDULED_IDS_KEY, items.joinToString("\n") { it.id })
     }
 
     override suspend fun cancelAll() {
-        val ids = store.getStringOrNull(SCHEDULED_IDS_KEY)
-            ?.split("\n")
-            ?.filter { it.isNotEmpty() }
-            ?: return
+        val ids =
+            store.getStringOrNull(SCHEDULED_IDS_KEY)?.split("\n")?.filter { it.isNotEmpty() }
+                ?: return
         for (id in ids) {
-            val pi = PendingIntent.getBroadcast(
-                context,
-                requestCodeFor(id),
-                baseIntent(id),
-                PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE,
-            )
+            val pi =
+                PendingIntent.getBroadcast(
+                    context,
+                    requestCodeFor(id),
+                    baseIntent(id),
+                    PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE,
+                )
             if (pi != null) {
                 alarms.cancel(pi)
                 pi.cancel()
@@ -87,22 +77,23 @@ private class AndroidNotificationScheduler(
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (nm.getNotificationChannel(INSANE_NOTIFICATION_CHANNEL_ID) != null) return
-        val channel = NotificationChannel(
-            INSANE_NOTIFICATION_CHANNEL_ID,
-            meta.name,
-            NotificationManager.IMPORTANCE_HIGH,
-        ).apply {
-            description = meta.description
-        }
+        val channel =
+            NotificationChannel(
+                    INSANE_NOTIFICATION_CHANNEL_ID,
+                    meta.name,
+                    NotificationManager.IMPORTANCE_HIGH,
+                )
+                .apply { description = meta.description }
         nm.createNotificationChannel(channel)
     }
 
     private fun buildAlarmIntent(item: ScheduledNotification): PendingIntent {
-        val intent = baseIntent(item.id).apply {
-            putExtra(InsaneNotificationReceiver.EXTRA_ID, item.id)
-            putExtra(InsaneNotificationReceiver.EXTRA_TITLE, item.title)
-            putExtra(InsaneNotificationReceiver.EXTRA_BODY, item.body)
-        }
+        val intent =
+            baseIntent(item.id).apply {
+                putExtra(InsaneNotificationReceiver.EXTRA_ID, item.id)
+                putExtra(InsaneNotificationReceiver.EXTRA_TITLE, item.title)
+                putExtra(InsaneNotificationReceiver.EXTRA_BODY, item.body)
+            }
         return PendingIntent.getBroadcast(
             context,
             requestCodeFor(item.id),

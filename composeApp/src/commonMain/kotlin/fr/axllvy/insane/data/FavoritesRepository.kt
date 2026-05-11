@@ -29,14 +29,13 @@ private const val PENDING_KEY = "favorites_pending_v1"
 private const val OWNER_KEY = "favorites_owner_v1"
 
 /**
- * Local-first favorites. The UI reads from on-disk cache at launch; toggles
- * persist locally before the network is touched. A pending-intent map carries
- * offline edits across launches and drains on every [sync].
+ * Local-first favorites. The UI reads from on-disk cache at launch; toggles persist locally before
+ * the network is touched. A pending-intent map carries offline edits across launches and drains on
+ * every [sync].
  *
- * Conflict policy: a key present in `pending` overrides whatever the server
- * returns, until that intent has been acknowledged. Single-device offline edits
- * round-trip safely; multi-device divergence is last-sync-wins (acceptable
- * here — rows carry no `updated_at` for per-edit LWW).
+ * Conflict policy: a key present in `pending` overrides whatever the server returns, until that
+ * intent has been acknowledged. Single-device offline edits round-trip safely; multi-device
+ * divergence is last-sync-wins (acceptable here — rows carry no `updated_at` for per-edit LWW).
  */
 class FavoritesRepository(
     private val http: HttpClient,
@@ -47,9 +46,9 @@ class FavoritesRepository(
     val favorites: StateFlow<Set<String>> = _favorites.asStateFlow()
 
     /**
-     * Per-set favorite counts across all users (keyed by fav_key). Populated
-     * by [loadCounts] from the aggregate RPC; nudged optimistically on every
-     * local [toggle] so the UI reacts before the next sync lands.
+     * Per-set favorite counts across all users (keyed by fav_key). Populated by [loadCounts] from
+     * the aggregate RPC; nudged optimistically on every local [toggle] so the UI reacts before the
+     * next sync lands.
      */
     private val _counts = MutableStateFlow<Map<String, Int>>(emptyMap())
     val counts: StateFlow<Map<String, Int>> = _counts.asStateFlow()
@@ -57,12 +56,15 @@ class FavoritesRepository(
     private val mutex = Mutex()
     private val pending: MutableMap<String, Intent> = mutableMapOf()
 
-    private val json = Json { ignoreUnknownKeys = true; isLenient = true }
+    private val json = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+    }
 
     /**
-     * Hydrate the flow from disk. If the cached owner doesn't match the current
-     * session we wipe — prevents a previous anonymous identity's favorites from
-     * leaking into a freshly minted session.
+     * Hydrate the flow from disk. If the cached owner doesn't match the current session we wipe —
+     * prevents a previous anonymous identity's favorites from leaking into a freshly minted
+     * session.
      */
     fun loadFromCache() {
         val me = session.userId
@@ -75,23 +77,30 @@ class FavoritesRepository(
             _favorites.value = emptySet()
             return
         }
-        val cached = settings.getStringOrNull(CACHE_KEY)
-            ?.let { runCatching { json.decodeFromString(CachedFavorites.serializer(), it) }.getOrNull() }
-            ?.keys
-            ?.toSet()
-            ?: emptySet()
-        val pendingState = settings.getStringOrNull(PENDING_KEY)
-            ?.let { runCatching { json.decodeFromString(PendingState.serializer(), it) }.getOrNull() }
-            ?.intents
-            ?: emptyMap()
+        val cached =
+            settings
+                .getStringOrNull(CACHE_KEY)
+                ?.let {
+                    runCatching { json.decodeFromString(CachedFavorites.serializer(), it) }
+                        .getOrNull()
+                }
+                ?.keys
+                ?.toSet() ?: emptySet()
+        val pendingState =
+            settings
+                .getStringOrNull(PENDING_KEY)
+                ?.let {
+                    runCatching { json.decodeFromString(PendingState.serializer(), it) }.getOrNull()
+                }
+                ?.intents ?: emptyMap()
         pending.clear()
         pending.putAll(pendingState)
         _favorites.value = applyPending(cached)
     }
 
     /**
-     * Optimistic toggle — persist locally, then best-effort drain. If the
-     * network call fails the pending entry survives and the next [sync] retries.
+     * Optimistic toggle — persist locally, then best-effort drain. If the network call fails the
+     * pending entry survives and the next [sync] retries.
      */
     suspend fun toggle(key: String) {
         mutex.withLock {
@@ -110,14 +119,11 @@ class FavoritesRepository(
     }
 
     /**
-     * Drain pending intents, then pull the canonical set. Safe to call
-     * repeatedly and concurrently — a second caller will see an empty queue if
-     * the first already drained it.
+     * Drain pending intents, then pull the canonical set. Safe to call repeatedly and concurrently
+     * — a second caller will see an empty queue if the first already drained it.
      */
     suspend fun sync() {
-        val me = session.userId
-            ?: session.requireAccessToken().let { session.userId }
-            ?: return
+        val me = session.userId ?: session.requireAccessToken().let { session.userId } ?: return
 
         if (settings.getStringOrNull(OWNER_KEY) != me) {
             settings.putString(OWNER_KEY, me)
@@ -126,22 +132,25 @@ class FavoritesRepository(
         val snapshot = mutex.withLock { pending.toMap() }
         val succeeded = mutableSetOf<String>()
         for ((key, intent) in snapshot) {
-            val ok = runCatching {
-                when (intent) {
-                    Intent.ADD -> addRemote(me, key)
-                    Intent.REMOVE -> removeRemote(me, key)
-                }
-            }.isSuccess
+            val ok =
+                runCatching {
+                        when (intent) {
+                            Intent.ADD -> addRemote(me, key)
+                            Intent.REMOVE -> removeRemote(me, key)
+                        }
+                    }
+                    .isSuccess
             if (ok) succeeded += key
         }
 
-        val canFetch = mutex.withLock {
-            // Only drop ops we successfully flushed *and* that haven't been
-            // superseded by a toggle that landed mid-flush.
-            succeeded.forEach { k -> if (pending[k] == snapshot[k]) pending.remove(k) }
-            persist(_favorites.value)
-            pending.isEmpty()
-        }
+        val canFetch =
+            mutex.withLock {
+                // Only drop ops we successfully flushed *and* that haven't been
+                // superseded by a toggle that landed mid-flush.
+                succeeded.forEach { k -> if (pending[k] == snapshot[k]) pending.remove(k) }
+                persist(_favorites.value)
+                pending.isEmpty()
+            }
         if (!canFetch) return
 
         val remote = runCatching { fetchRemote(me) }.getOrNull() ?: return
@@ -157,16 +166,20 @@ class FavoritesRepository(
 
     /** Pull the per-set aggregate counts across every user. Safe to call alone. */
     suspend fun loadCounts() {
-        val response = http.pgPost(session, "/rest/v1/rpc/favorite_counts", schema = Config.INSANE_SCHEMA) {
-            setBody(buildJsonObject { /* no args */ })
-        }
+        val response =
+            http.pgPost(session, "/rest/v1/rpc/favorite_counts", schema = Config.INSANE_SCHEMA) {
+                setBody(buildJsonObject { /* no args */ })
+            }
         val rows = json.parseToJsonElement(response.bodyAsText()) as? JsonArray ?: return
-        val parsed = rows.mapNotNull { row ->
-            val obj = row as? JsonObject ?: return@mapNotNull null
-            val key = obj["fav_key"]?.jsonPrimitive?.content ?: return@mapNotNull null
-            val count = obj["count"]?.jsonPrimitive?.long?.toInt() ?: return@mapNotNull null
-            key to count
-        }.toMap()
+        val parsed =
+            rows
+                .mapNotNull { row ->
+                    val obj = row as? JsonObject ?: return@mapNotNull null
+                    val key = obj["fav_key"]?.jsonPrimitive?.content ?: return@mapNotNull null
+                    val count = obj["count"]?.jsonPrimitive?.long?.toInt() ?: return@mapNotNull null
+                    key to count
+                }
+                .toMap()
         _counts.value = parsed
     }
 
@@ -194,12 +207,15 @@ class FavoritesRepository(
     }
 
     private suspend fun fetchRemote(me: String): Set<String> {
-        val response = http.pgGet(session, "/rest/v1/favorites", schema = Config.INSANE_SCHEMA) {
-            parameter("user_id", "eq.$me")
-            parameter("select", "fav_key")
-        }
+        val response =
+            http.pgGet(session, "/rest/v1/favorites", schema = Config.INSANE_SCHEMA) {
+                parameter("user_id", "eq.$me")
+                parameter("select", "fav_key")
+            }
         val rows = json.parseToJsonElement(response.bodyAsText()) as? JsonArray ?: return emptySet()
-        return rows.mapNotNull { (it as? JsonObject)?.get("fav_key")?.jsonPrimitive?.content }.toSet()
+        return rows
+            .mapNotNull { (it as? JsonObject)?.get("fav_key")?.jsonPrimitive?.content }
+            .toSet()
     }
 
     private suspend fun addRemote(me: String, key: String) {
@@ -208,10 +224,12 @@ class FavoritesRepository(
             header("Prefer", "resolution=ignore-duplicates,return=minimal")
             setBody(
                 buildJsonArray {
-                    add(buildJsonObject {
-                        put("user_id", me)
-                        put("fav_key", key)
-                    })
+                    add(
+                        buildJsonObject {
+                            put("user_id", me)
+                            put("fav_key", key)
+                        }
+                    )
                 }
             )
         }
@@ -225,11 +243,12 @@ class FavoritesRepository(
     }
 }
 
-@Serializable
-private data class CachedFavorites(val keys: List<String>)
+@Serializable private data class CachedFavorites(val keys: List<String>)
+
+@Serializable private data class PendingState(val intents: Map<String, Intent>)
 
 @Serializable
-private data class PendingState(val intents: Map<String, Intent>)
-
-@Serializable
-private enum class Intent { ADD, REMOVE }
+private enum class Intent {
+    ADD,
+    REMOVE,
+}

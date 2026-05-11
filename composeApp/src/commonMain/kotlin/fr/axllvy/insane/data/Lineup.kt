@@ -2,7 +2,12 @@ package fr.axllvy.insane.data
 
 import kotlinx.serialization.Serializable
 
-enum class StageKey { MIRAGE, CLOUD, ALTF4, TECHNOBUS }
+enum class StageKey {
+    MIRAGE,
+    CLOUD,
+    ALTF4,
+    TECHNOBUS,
+}
 
 enum class DayKey(val id: String) {
     JEU("jeu"),
@@ -14,10 +19,10 @@ enum class DayKey(val id: String) {
     }
 }
 
-@Serializable
-data class SetEntry(val s: String, val e: String, val a: String)
+@Serializable data class SetEntry(val s: String, val e: String, val a: String)
 
 typealias StageMap = Map<StageKey, List<SetEntry>>
+
 typealias Lineup = Map<DayKey, StageMap>
 
 private const val DAY_START_MIN = 12 * 60

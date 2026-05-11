@@ -17,68 +17,70 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 
 /**
- * Thin helpers that add the standard Supabase headers (apikey + Bearer access
- * token + schema selector) to every PostgREST call.
+ * Thin helpers that add the standard Supabase headers (apikey + Bearer access token + schema
+ * selector) to every PostgREST call.
  *
- * Schema selection: PostgREST uses `Accept-Profile` for read verbs and
- * `Content-Profile` for write verbs. The lineup table is in `public`; the
- * friends-feature tables live in `insane`. Each caller passes the relevant
- * schema explicitly — defaulting to `LINEUP_SCHEMA` keeps the existing
- * lineup client untouched.
+ * Schema selection: PostgREST uses `Accept-Profile` for read verbs and `Content-Profile` for write
+ * verbs. The lineup table is in `public`; the friends-feature tables live in `insane`. Each caller
+ * passes the relevant schema explicitly — defaulting to `LINEUP_SCHEMA` keeps the existing lineup
+ * client untouched.
  */
-
 internal suspend fun HttpClient.pgGet(
     session: SessionStore,
     path: String,
     schema: String = Config.LINEUP_SCHEMA,
     block: HttpRequestBuilder.() -> Unit = {},
-): HttpResponse = pgCall("GET", path, schema) {
-    get("${Config.SUPABASE_URL}$path") {
-        pgRead(session, schema)
-        block()
+): HttpResponse =
+    pgCall("GET", path, schema) {
+        get("${Config.SUPABASE_URL}$path") {
+            pgRead(session, schema)
+            block()
+        }
     }
-}
 
 internal suspend fun HttpClient.pgPost(
     session: SessionStore,
     path: String,
     schema: String = Config.LINEUP_SCHEMA,
     block: HttpRequestBuilder.() -> Unit = {},
-): HttpResponse = pgCall("POST", path, schema) {
-    post("${Config.SUPABASE_URL}$path") {
-        pgWrite(session, schema)
-        block()
+): HttpResponse =
+    pgCall("POST", path, schema) {
+        post("${Config.SUPABASE_URL}$path") {
+            pgWrite(session, schema)
+            block()
+        }
     }
-}
 
 internal suspend fun HttpClient.pgPatch(
     session: SessionStore,
     path: String,
     schema: String = Config.LINEUP_SCHEMA,
     block: HttpRequestBuilder.() -> Unit = {},
-): HttpResponse = pgCall("PATCH", path, schema) {
-    patch("${Config.SUPABASE_URL}$path") {
-        pgWrite(session, schema)
-        block()
+): HttpResponse =
+    pgCall("PATCH", path, schema) {
+        patch("${Config.SUPABASE_URL}$path") {
+            pgWrite(session, schema)
+            block()
+        }
     }
-}
 
 internal suspend fun HttpClient.pgDelete(
     session: SessionStore,
     path: String,
     schema: String = Config.LINEUP_SCHEMA,
     block: HttpRequestBuilder.() -> Unit = {},
-): HttpResponse = pgCall("DELETE", path, schema) {
-    delete("${Config.SUPABASE_URL}$path") {
-        pgWrite(session, schema)
-        block()
+): HttpResponse =
+    pgCall("DELETE", path, schema) {
+        delete("${Config.SUPABASE_URL}$path") {
+            pgWrite(session, schema)
+            block()
+        }
     }
-}
 
 /**
- * Common request wrapper — logs verb/path/status (and rethrows with the
- * original cause). Body logging is deferred to callers, since reading the
- * body here would consume the stream and break parsing downstream.
+ * Common request wrapper — logs verb/path/status (and rethrows with the original cause). Body
+ * logging is deferred to callers, since reading the body here would consume the stream and break
+ * parsing downstream.
  */
 private suspend inline fun pgCall(
     verb: String,

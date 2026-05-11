@@ -15,11 +15,11 @@ import io.github.alexzhirkevich.qrose.rememberQrCodePainter
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * Renders [data] as a QR code via qrose, which is purpose-built for
- * Compose Multiplatform and ships proper iOS/wasmJs artifacts.
+ * Renders [data] as a QR code via qrose, which is purpose-built for Compose Multiplatform and ships
+ * proper iOS/wasmJs artifacts.
  *
- * `Medium` ECC level gives ~15% damage tolerance — enough for a screen photo
- * without inflating the matrix needlessly for a 6-char payload.
+ * `Medium` ECC level gives ~15% damage tolerance — enough for a screen photo without inflating the
+ * matrix needlessly for a 6-char payload.
  */
 @Composable
 fun QrCodeView(
@@ -28,13 +28,14 @@ fun QrCodeView(
     foreground: Color = Color.White,
     background: Color = Color.Black,
 ) {
-    val painter = rememberQrCodePainter(data) {
-        errorCorrectionLevel = QrErrorCorrectionLevel.Medium
-        colors {
-            dark = QrBrush.solid(foreground)
-            light = QrBrush.solid(background)
+    val painter =
+        rememberQrCodePainter(data) {
+            errorCorrectionLevel = QrErrorCorrectionLevel.Medium
+            colors {
+                dark = QrBrush.solid(foreground)
+                light = QrBrush.solid(background)
+            }
         }
-    }
     Image(
         painter = painter,
         contentDescription = stringResource(Res.string.cd_qr_code, data),

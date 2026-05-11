@@ -68,19 +68,19 @@ internal fun LineupSearchSheet(
     val results = remember(query) { index.query(query) }
 
     Box(
-        Modifier
-            .fillMaxSize()
-            .background(InsaneColors.DialogScrim)
-            .clickable(onClick = onClose),
+        Modifier.fillMaxSize().background(InsaneColors.DialogScrim).clickable(onClick = onClose),
         contentAlignment = Alignment.BottomCenter,
     ) {
         Column(
-            Modifier
-                .fillMaxWidth()
+            Modifier.fillMaxWidth()
                 .fillMaxHeight(0.92f)
                 .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))
                 .background(InsaneColors.BgMid)
-                .border(1.dp, InsaneColors.Accent.copy(alpha = 0.4f), RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))
+                .border(
+                    1.dp,
+                    InsaneColors.Accent.copy(alpha = 0.4f),
+                    RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp),
+                )
                 .clickable(enabled = false) {}
                 .imePadding()
                 .padding(horizontal = 18.dp, vertical = 18.dp),
@@ -105,42 +105,40 @@ internal fun LineupSearchSheet(
                         modifier = Modifier.size(18.dp),
                     )
                 },
-                trailingIcon = if (query.isNotEmpty()) {
-                    {
-                        Box(
-                            Modifier
-                                .size(28.dp)
-                                .clip(CircleShape)
-                                .clickable { query = "" },
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                Icons.Filled.Close,
-                                contentDescription = null,
-                                tint = InsaneColors.OnBgDim,
-                                modifier = Modifier.size(14.dp),
-                            )
+                trailingIcon =
+                    if (query.isNotEmpty()) {
+                        {
+                            Box(
+                                Modifier.size(28.dp).clip(CircleShape).clickable { query = "" },
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    Icons.Filled.Close,
+                                    contentDescription = null,
+                                    tint = InsaneColors.OnBgDim,
+                                    modifier = Modifier.size(14.dp),
+                                )
+                            }
                         }
-                    }
-                } else null,
+                    } else null,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                colors = TextFieldDefaults.colors(
-                    focusedTextColor = InsaneColors.OnBg,
-                    unfocusedTextColor = InsaneColors.OnBg,
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    focusedIndicatorColor = InsaneColors.Accent,
-                    unfocusedIndicatorColor = InsaneColors.Border,
-                    cursorColor = InsaneColors.Accent,
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .focusRequester(focus),
+                colors =
+                    TextFieldDefaults.colors(
+                        focusedTextColor = InsaneColors.OnBg,
+                        unfocusedTextColor = InsaneColors.OnBg,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor = InsaneColors.Accent,
+                        unfocusedIndicatorColor = InsaneColors.Border,
+                        cursorColor = InsaneColors.Accent,
+                    ),
+                modifier = Modifier.fillMaxWidth().focusRequester(focus),
             )
             Box(Modifier.fillMaxWidth().fillMaxHeight()) {
                 when {
                     query.isBlank() -> EmptyMessage(stringResource(Res.string.search_empty_prompt))
-                    results.isEmpty() -> EmptyMessage(stringResource(Res.string.search_empty_no_match))
+                    results.isEmpty() ->
+                        EmptyMessage(stringResource(Res.string.search_empty_no_match))
                     else -> ResultsList(results = results, onResult = onResult)
                 }
             }
@@ -160,10 +158,7 @@ private fun SearchHeader(onClose: () -> Unit) {
         )
         Spacer(Modifier.weight(1f))
         Box(
-            Modifier
-                .size(32.dp)
-                .clip(CircleShape)
-                .clickable(onClick = onClose),
+            Modifier.size(32.dp).clip(CircleShape).clickable(onClick = onClose),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
@@ -178,20 +173,13 @@ private fun SearchHeader(onClose: () -> Unit) {
 @Composable
 private fun EmptyMessage(text: String) {
     Box(Modifier.fillMaxWidth().padding(top = 24.dp), contentAlignment = Alignment.TopCenter) {
-        Text(
-            text,
-            color = InsaneColors.OnBgDim,
-            fontSize = 12.sp,
-        )
+        Text(text, color = InsaneColors.OnBgDim, fontSize = 12.sp)
     }
 }
 
 @Composable
 private fun ResultsList(results: List<SetMatch>, onResult: (SetMatch) -> Unit) {
-    LazyColumn(
-        Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
+    LazyColumn(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         items(results, key = { it.key() }) { m -> ResultRow(m, onResult) }
     }
 }
@@ -200,8 +188,7 @@ private fun ResultsList(results: List<SetMatch>, onResult: (SetMatch) -> Unit) {
 private fun ResultRow(match: SetMatch, onResult: (SetMatch) -> Unit) {
     val meta = stageMeta.getValue(match.stage)
     Row(
-        Modifier
-            .fillMaxWidth()
+        Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
             .background(InsaneColors.Bg.copy(alpha = 0.5f))
             .border(1.dp, meta.color.copy(alpha = 0.5f), RoundedCornerShape(10.dp))

@@ -9,12 +9,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import kotlinx.coroutines.CompletableDeferred
 
 /**
- * Glue between [AndroidNotificationScheduler.requestPermission] (suspend, called
- * from a click handler in a Composable) and Android's permission API (requires
- * an [ActivityResultLauncher] registered before [ComponentActivity.onStart]).
+ * Glue between [AndroidNotificationScheduler.requestPermission] (suspend, called from a click
+ * handler in a Composable) and Android's permission API (requires an [ActivityResultLauncher]
+ * registered before [ComponentActivity.onStart]).
  *
- * MainActivity registers the launcher via [attach]; the scheduler resolves the
- * suspending request through the deferred set up here.
+ * MainActivity registers the launcher via [attach]; the scheduler resolves the suspending request
+ * through the deferred set up here.
  */
 object AndroidPermissionRequester {
     private var launcher: ActivityResultLauncher<String>? = null
@@ -23,12 +23,12 @@ object AndroidPermissionRequester {
     // Lint flags this for Fragment <1.3.0; we use ComponentActivity (androidx.activity 1.10.1).
     @SuppressLint("InvalidFragmentVersionForActivityResult")
     fun attach(activity: ComponentActivity) {
-        launcher = activity.registerForActivityResult(
-            ActivityResultContracts.RequestPermission(),
-        ) { granted ->
-            pending?.complete(granted)
-            pending = null
-        }
+        launcher =
+            activity.registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+                granted ->
+                pending?.complete(granted)
+                pending = null
+            }
     }
 
     fun detach() {

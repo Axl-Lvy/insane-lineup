@@ -18,16 +18,18 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
 
 /**
- * Thin wrapper over the GoTrue REST API. Always includes the apikey header so
- * it works *before* we have a session.
+ * Thin wrapper over the GoTrue REST API. Always includes the apikey header so it works *before* we
+ * have a session.
  *
- * We deserialize the response body manually (not via ktor's `.body()`) so a
- * non-2xx error response — typically `{"code": "...", "msg": "..."}` for
- * disabled providers — surfaces the real message instead of a confusing
- * "fields missing" deserialize error.
+ * We deserialize the response body manually (not via ktor's `.body()`) so a non-2xx error response
+ * — typically `{"code": "...", "msg": "..."}` for disabled providers — surfaces the real message
+ * instead of a confusing "fields missing" deserialize error.
  */
 class AuthClient(private val http: HttpClient) {
-    private val json = Json { ignoreUnknownKeys = true; isLenient = true }
+    private val json = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+    }
 
     suspend fun signInAnonymously(): GoTrueSession {
         val body = buildJsonObject {
@@ -47,13 +49,14 @@ class AuthClient(private val http: HttpClient) {
         body: JsonObject,
         queryGrantType: String? = null,
     ): GoTrueSession {
-        val response = http.post("${Config.SUPABASE_URL}$path") {
-            header("apikey", Config.SUPABASE_ANON_KEY)
-            header(HttpHeaders.Authorization, "Bearer ${Config.SUPABASE_ANON_KEY}")
-            contentType(ContentType.Application.Json)
-            if (queryGrantType != null) parameter("grant_type", queryGrantType)
-            setBody(body)
-        }
+        val response =
+            http.post("${Config.SUPABASE_URL}$path") {
+                header("apikey", Config.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer ${Config.SUPABASE_ANON_KEY}")
+                contentType(ContentType.Application.Json)
+                if (queryGrantType != null) parameter("grant_type", queryGrantType)
+                setBody(body)
+            }
         val text = response.bodyAsText()
         val status = response.status.value
         if (status !in 200..299) {
@@ -70,7 +73,5 @@ class AuthClient(private val http: HttpClient) {
     }
 }
 
-class GoTrueException(
-    val status: Int,
-    val bodyExcerpt: String,
-) : RuntimeException("GoTrue $status — $bodyExcerpt")
+class GoTrueException(val status: Int, val bodyExcerpt: String) :
+    RuntimeException("GoTrue $status — $bodyExcerpt")

@@ -20,21 +20,17 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
 /** A friend in the user's roster. */
-@Serializable
-data class Friend(
-    val id: String,
-    val displayName: String?,
-)
+@Serializable data class Friend(val id: String, val displayName: String?)
 
 /**
- * Result of a friend code rotation: the 6-char code + when it expires
- * (epoch ms, for countdown display). Both come straight from the RPC.
+ * Result of a friend code rotation: the 6-char code + when it expires (epoch ms, for countdown
+ * display). Both come straight from the RPC.
  */
-@Serializable
-data class FriendCode(val code: String, val expiresAtMs: Long)
+@Serializable data class FriendCode(val code: String, val expiresAtMs: Long)
 
 sealed interface RedeemResult {
     data class Added(val friend: Friend) : RedeemResult
+
     data class Failed(val message: String) : RedeemResult
 }
 
@@ -53,7 +49,10 @@ class FriendsRepository(
     private val _friendFavorites = MutableStateFlow<Map<String, Set<String>>>(emptyMap())
     val friendFavorites: StateFlow<Map<String, Set<String>>> = _friendFavorites.asStateFlow()
 
-    private val json = Json { ignoreUnknownKeys = true; isLenient = true }
+    private val json = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+    }
 
     suspend fun loadAll() {
         loadMyProfile()
@@ -63,34 +62,40 @@ class FriendsRepository(
 
     suspend fun loadMyProfile() {
         val me = session.userId ?: return
-        val response = http.pgGet(session, "/rest/v1/profiles", schema = Config.INSANE_SCHEMA) {
-            parameter("id", "eq.$me")
-            parameter("select", "display_name")
-        }
+        val response =
+            http.pgGet(session, "/rest/v1/profiles", schema = Config.INSANE_SCHEMA) {
+                parameter("id", "eq.$me")
+                parameter("select", "display_name")
+            }
         val rows = json.parseToJsonElement(response.bodyAsText()) as? JsonArray ?: return
         val first = rows.firstOrNull() as? JsonObject ?: return
         _myDisplayName.value = first["display_name"]?.jsonPrimitive?.contentOrNullSafe()
     }
 
     /**
-     * The friendships table holds (a, b) directed pairs; a SELECT scoped by
-     * RLS to my rows already returns only the edges where I'm involved. We
-     * keep the rows where `a_id = me` and join to profiles for display names.
+     * The friendships table holds (a, b) directed pairs; a SELECT scoped by RLS to my rows already
+     * returns only the edges where I'm involved. We keep the rows where `a_id = me` and join to
+     * profiles for display names.
      */
     suspend fun loadFriends() {
         val me = session.userId ?: return
-        val response = http.pgGet(session, "/rest/v1/friendships", schema = Config.INSANE_SCHEMA) {
-            parameter("a_id", "eq.$me")
-            parameter("select", "b_id,profile:profiles!friendships_b_id_fkey(display_name)")
-        }
+        val response =
+            http.pgGet(session, "/rest/v1/friendships", schema = Config.INSANE_SCHEMA) {
+                parameter("a_id", "eq.$me")
+                parameter("select", "b_id,profile:profiles!friendships_b_id_fkey(display_name)")
+            }
         val rows = json.parseToJsonElement(response.bodyAsText()) as? JsonArray ?: return
-        _friends.value = rows.mapNotNull { row ->
-            val obj = row as? JsonObject ?: return@mapNotNull null
-            val id = obj["b_id"]?.jsonPrimitive?.content ?: return@mapNotNull null
-            val displayName = (obj["profile"] as? JsonObject)
-                ?.get("display_name")?.jsonPrimitive?.contentOrNullSafe()
-            Friend(id = id, displayName = displayName)
-        }
+        _friends.value =
+            rows.mapNotNull { row ->
+                val obj = row as? JsonObject ?: return@mapNotNull null
+                val id = obj["b_id"]?.jsonPrimitive?.content ?: return@mapNotNull null
+                val displayName =
+                    (obj["profile"] as? JsonObject)
+                        ?.get("display_name")
+                        ?.jsonPrimitive
+                        ?.contentOrNullSafe()
+                Friend(id = id, displayName = displayName)
+            }
     }
 
     /** Fetch every friend's favorites (RLS scopes this to friends only). */
@@ -101,10 +106,11 @@ class FriendsRepository(
             return
         }
         val inList = ids.joinToString(",", prefix = "(", postfix = ")")
-        val response = http.pgGet(session, "/rest/v1/favorites", schema = Config.INSANE_SCHEMA) {
-            parameter("user_id", "in.$inList")
-            parameter("select", "user_id,fav_key")
-        }
+        val response =
+            http.pgGet(session, "/rest/v1/favorites", schema = Config.INSANE_SCHEMA) {
+                parameter("user_id", "in.$inList")
+                parameter("select", "user_id,fav_key")
+            }
         val rows = json.parseToJsonElement(response.bodyAsText()) as? JsonArray ?: return
         val map = mutableMapOf<String, MutableSet<String>>()
         rows.forEach { row ->
@@ -117,37 +123,53 @@ class FriendsRepository(
     }
 
     /**
-     * Generate a fresh 6-char friend code on the server. Returns null on error.
-     * The TTL is 10 minutes; we compute the absolute deadline client-side
-     * rather than parse the server's timestamptz (avoids a date library).
+     * Generate a fresh 6-char friend code on the server. Returns null on error. The TTL is 10
+     * minutes; we compute the absolute deadline client-side rather than parse the server's
+     * timestamptz (avoids a date library).
      */
-    suspend fun rotateCode(): FriendCode? = runCatching {
-        val response = http.pgPost(session, "/rest/v1/rpc/rotate_friend_code", schema = Config.INSANE_SCHEMA) {
-            setBody(buildJsonObject { /* no args */ })
-        }
-        val rows = json.parseToJsonElement(response.bodyAsText()) as? JsonArray ?: return@runCatching null
-        val first = rows.firstOrNull() as? JsonObject ?: return@runCatching null
-        val code = first["code"]?.jsonPrimitive?.content ?: return@runCatching null
-        FriendCode(code = code, expiresAtMs = nowMs() + 10 * 60 * 1000L)
-    }.getOrNull()
+    suspend fun rotateCode(): FriendCode? =
+        runCatching {
+                val response =
+                    http.pgPost(
+                        session,
+                        "/rest/v1/rpc/rotate_friend_code",
+                        schema = Config.INSANE_SCHEMA,
+                    ) {
+                        setBody(buildJsonObject { /* no args */ })
+                    }
+                val rows =
+                    json.parseToJsonElement(response.bodyAsText()) as? JsonArray
+                        ?: return@runCatching null
+                val first = rows.firstOrNull() as? JsonObject ?: return@runCatching null
+                val code = first["code"]?.jsonPrimitive?.content ?: return@runCatching null
+                FriendCode(code = code, expiresAtMs = nowMs() + 10 * 60 * 1000L)
+            }
+            .getOrNull()
 
     /** Redeem someone else's code. Adds them as a friend bidirectionally. */
     suspend fun redeem(code: String): RedeemResult {
         val cleaned = code.trim().uppercase()
         if (cleaned.length != 6) return RedeemResult.Failed("Code must be 6 characters")
         return try {
-            val response = http.pgPost(session, "/rest/v1/rpc/redeem_friend_code", schema = Config.INSANE_SCHEMA) {
-                setBody(buildJsonObject { put("p_code", cleaned) })
-            }
+            val response =
+                http.pgPost(
+                    session,
+                    "/rest/v1/rpc/redeem_friend_code",
+                    schema = Config.INSANE_SCHEMA,
+                ) {
+                    setBody(buildJsonObject { put("p_code", cleaned) })
+                }
             if (response.status != HttpStatusCode.OK) {
                 return RedeemResult.Failed(parsePostgrestError(response.bodyAsText()))
             }
-            val rows = json.parseToJsonElement(response.bodyAsText()) as? JsonArray
-                ?: return RedeemResult.Failed("Empty response")
-            val first = rows.firstOrNull() as? JsonObject
-                ?: return RedeemResult.Failed("Empty response")
-            val id = first["friend_id"]?.jsonPrimitive?.content
-                ?: return RedeemResult.Failed("Bad response")
+            val rows =
+                json.parseToJsonElement(response.bodyAsText()) as? JsonArray
+                    ?: return RedeemResult.Failed("Empty response")
+            val first =
+                rows.firstOrNull() as? JsonObject ?: return RedeemResult.Failed("Empty response")
+            val id =
+                first["friend_id"]?.jsonPrimitive?.content
+                    ?: return RedeemResult.Failed("Bad response")
             val name = first["display_name"]?.jsonPrimitive?.contentOrNullSafe()
             val friend = Friend(id = id, displayName = name)
             _friends.value = _friends.value + friend
@@ -187,8 +209,9 @@ class FriendsRepository(
     }
 
     private fun parsePostgrestError(body: String): String {
-        val obj = (runCatching { json.parseToJsonElement(body) }.getOrNull() as? JsonObject)
-            ?: return body.take(120).ifBlank { "Request failed" }
+        val obj =
+            (runCatching { json.parseToJsonElement(body) }.getOrNull() as? JsonObject)
+                ?: return body.take(120).ifBlank { "Request failed" }
         return obj["message"]?.jsonPrimitive?.contentOrNullSafe()
             ?: obj["error"]?.jsonPrimitive?.contentOrNullSafe()
             ?: body.take(120)
@@ -196,8 +219,8 @@ class FriendsRepository(
 }
 
 /**
- * `JsonPrimitive.content` returns the literal string "null" for JSON null —
- * we want a real Kotlin null in that case.
+ * `JsonPrimitive.content` returns the literal string "null" for JSON null — we want a real Kotlin
+ * null in that case.
  */
 private fun kotlinx.serialization.json.JsonPrimitive.contentOrNullSafe(): String? =
     if (isString) content else if (content == "null") null else content

@@ -13,9 +13,8 @@ import kotlinx.serialization.json.Json
 private const val SESSION_KEY = "auth_session_v1"
 
 /**
- * Persists the current GoTrue session and exposes a single coroutine-safe entry
- * point that guarantees a valid access token: [requireAccessToken].
- *
+ * Persists the current GoTrue session and exposes a single coroutine-safe entry point that
+ * guarantees a valid access token: [requireAccessToken].
  * - On first call: signs in anonymously.
  * - When the cached token is close to expiry: refreshes.
  * - Concurrent callers share a single in-flight network call via [refreshMutex].
@@ -25,38 +24,44 @@ class SessionStore(
     private val auth: AuthClient,
     private val nowMs: () -> Long,
 ) {
-    private val json = Json { ignoreUnknownKeys = true; isLenient = true }
+    private val json = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+    }
     private val refreshMutex = Mutex()
 
     private val _session = MutableStateFlow(load())
     val session: StateFlow<StoredSession?> = _session.asStateFlow()
 
-    val userId: String? get() = _session.value?.userId
+    val userId: String?
+        get() = _session.value?.userId
 
     /** Returns a non-expired access token, signing in or refreshing as needed. */
-    suspend fun requireAccessToken(): String = refreshMutex.withLock {
-        val now = nowMs()
-        val current = _session.value
-        if (current != null && !current.isExpired(now)) return current.accessToken
+    suspend fun requireAccessToken(): String =
+        refreshMutex.withLock {
+            val now = nowMs()
+            val current = _session.value
+            if (current != null && !current.isExpired(now)) return current.accessToken
 
-        val fresh = if (current == null) {
-            logI("auth: no session, signing in anonymously")
-            auth.signInAnonymously()
-        } else {
-            logI("auth: refreshing token")
-            try {
-                auth.refresh(current.refreshToken)
-            } catch (t: Throwable) {
-                // Refresh token rejected (revoked / project reset) — re-sign-in.
-                logE("auth: refresh failed (${t.message}), re-signing in")
-                auth.signInAnonymously()
-            }
+            val fresh =
+                if (current == null) {
+                    logI("auth: no session, signing in anonymously")
+                    auth.signInAnonymously()
+                } else {
+                    logI("auth: refreshing token")
+                    try {
+                        auth.refresh(current.refreshToken)
+                    } catch (t: Throwable) {
+                        // Refresh token rejected (revoked / project reset) — re-sign-in.
+                        logE("auth: refresh failed (${t.message}), re-signing in")
+                        auth.signInAnonymously()
+                    }
+                }
+            val stored = fresh.toStored(nowMs())
+            save(stored)
+            _session.value = stored
+            stored.accessToken
         }
-        val stored = fresh.toStored(nowMs())
-        save(stored)
-        _session.value = stored
-        stored.accessToken
-    }
 
     /** Clear the local session — used for sign-out / debugging. */
     fun clear() {

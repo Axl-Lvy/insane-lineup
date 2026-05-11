@@ -49,20 +49,16 @@ import platform.darwin.NSObject
 import platform.darwin.dispatch_get_main_queue
 
 /**
- * iOS QR scanner — AVFoundation preview wrapped in a Compose Column so we can
- * lay a close button above the camera surface (UIKitViewController doesn't
- * respect Compose z-order reliably on every Compose-Multiplatform version,
- * so we stack via layout, not via Box children).
+ * iOS QR scanner — AVFoundation preview wrapped in a Compose Column so we can lay a close button
+ * above the camera surface (UIKitViewController doesn't respect Compose z-order reliably on every
+ * Compose-Multiplatform version, so we stack via layout, not via Box children).
  *
- * Requires `NSCameraUsageDescription` in iosApp/Info.plist. If the user
- * denies camera access, the preview stays black.
+ * Requires `NSCameraUsageDescription` in iosApp/Info.plist. If the user denies camera access, the
+ * preview stays black.
  */
 @OptIn(ExperimentalForeignApi::class)
 @Composable
-actual fun QrScannerSheet(
-    onResult: (String?) -> Unit,
-    onDismiss: () -> Unit,
-) {
+actual fun QrScannerSheet(onResult: (String?) -> Unit, onDismiss: () -> Unit) {
     val controller = remember { ScannerViewController(onResult) }
     Column(Modifier.fillMaxSize().background(Color.Black)) {
         Row(
@@ -78,47 +74,45 @@ actual fun QrScannerSheet(
                 letterSpacing = 1.6.sp,
             )
             Box(
-                Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .clickable(onClick = onDismiss),
+                Modifier.size(32.dp).clip(CircleShape).clickable(onClick = onDismiss),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.Filled.Close, contentDescription = stringResource(Res.string.cd_close), tint = Color.White)
+                Icon(
+                    Icons.Filled.Close,
+                    contentDescription = stringResource(Res.string.cd_close),
+                    tint = Color.White,
+                )
             }
         }
-        UIKitViewController(
-            factory = { controller },
-            modifier = Modifier.fillMaxSize(),
-        )
+        UIKitViewController(factory = { controller }, modifier = Modifier.fillMaxSize())
     }
-    DisposableEffect(Unit) {
-        onDispose { controller.teardown() }
-    }
+    DisposableEffect(Unit) { onDispose { controller.teardown() } }
 }
 
 @OptIn(ExperimentalForeignApi::class)
-private class ScannerViewController(
-    private val onResult: (String?) -> Unit,
-) : UIViewController(nibName = null, bundle = null) {
+private class ScannerViewController(private val onResult: (String?) -> Unit) :
+    UIViewController(nibName = null, bundle = null) {
 
     private val session = AVCaptureSession()
     private var previewLayer: AVCaptureVideoPreviewLayer? = null
     private var alreadyHandled = false
 
-    private val delegate = object : NSObject(), AVCaptureMetadataOutputObjectsDelegateProtocol {
-        override fun captureOutput(
-            output: platform.AVFoundation.AVCaptureOutput,
-            didOutputMetadataObjects: List<*>,
-            fromConnection: platform.AVFoundation.AVCaptureConnection,
-        ) {
-            if (alreadyHandled) return
-            val first = didOutputMetadataObjects.firstOrNull() as? AVMetadataMachineReadableCodeObject ?: return
-            val value = first.stringValue ?: return
-            alreadyHandled = true
-            onResult(value)
+    private val delegate =
+        object : NSObject(), AVCaptureMetadataOutputObjectsDelegateProtocol {
+            override fun captureOutput(
+                output: platform.AVFoundation.AVCaptureOutput,
+                didOutputMetadataObjects: List<*>,
+                fromConnection: platform.AVFoundation.AVCaptureConnection,
+            ) {
+                if (alreadyHandled) return
+                val first =
+                    didOutputMetadataObjects.firstOrNull() as? AVMetadataMachineReadableCodeObject
+                        ?: return
+                val value = first.stringValue ?: return
+                alreadyHandled = true
+                onResult(value)
+            }
         }
-    }
 
     override fun viewDidLoad() {
         super.viewDidLoad()
@@ -126,18 +120,23 @@ private class ScannerViewController(
 
         val device = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeVideo)
         if (device == null) {
-            onResult(null); return
+            onResult(null)
+            return
         }
         @Suppress("UNCHECKED_CAST")
-        val input = AVCaptureDeviceInput.deviceInputWithDevice(device, error = null) as? AVCaptureDeviceInput
+        val input =
+            AVCaptureDeviceInput.deviceInputWithDevice(device, error = null)
+                as? AVCaptureDeviceInput
         if (input == null || !session.canAddInput(input)) {
-            onResult(null); return
+            onResult(null)
+            return
         }
         session.addInput(input)
 
         val output = AVCaptureMetadataOutput()
         if (!session.canAddOutput(output)) {
-            onResult(null); return
+            onResult(null)
+            return
         }
         session.addOutput(output)
         output.setMetadataObjectsDelegate(delegate, queue = dispatch_get_main_queue())

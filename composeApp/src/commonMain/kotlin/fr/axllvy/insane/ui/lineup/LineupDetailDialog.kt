@@ -60,15 +60,11 @@ internal fun DetailDialog(
     val meta = stageMeta.getValue(stage)
 
     Box(
-        Modifier
-            .fillMaxSize()
-            .background(InsaneColors.DialogScrim)
-            .clickable(onClick = onDismiss),
+        Modifier.fillMaxSize().background(InsaneColors.DialogScrim).clickable(onClick = onDismiss),
         contentAlignment = Alignment.Center,
     ) {
         Column(
-            Modifier
-                .padding(20.dp)
+            Modifier.padding(20.dp)
                 .clip(RoundedCornerShape(16.dp))
                 .background(InsaneColors.BgMid)
                 .border(1.dp, meta.color, RoundedCornerShape(16.dp))
@@ -82,7 +78,12 @@ internal fun DetailDialog(
                 horizontalArrangement = Arrangement.spacedBy(7.dp),
             ) {
                 Box(Modifier.size(7.dp).clip(CircleShape).background(meta.color))
-                Text(meta.label.uppercase(), color = meta.color, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    meta.label.uppercase(),
+                    color = meta.color,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                )
             }
             ArtistAvatarRow(artists = splitArtists(set.a), accent = meta.color)
             Text(set.a, color = InsaneColors.OnBg, fontSize = 28.sp, fontWeight = FontWeight.Bold)
@@ -99,19 +100,19 @@ internal fun DetailDialog(
                     modifier = Modifier.size(14.dp),
                 )
                 Text(
-                    text = when (favCount) {
-                        0 -> stringResource(Res.string.detail_fav_count_none)
-                        1 -> stringResource(Res.string.detail_fav_count_one)
-                        else -> stringResource(Res.string.detail_fav_count_other, favCount)
-                    },
+                    text =
+                        when (favCount) {
+                            0 -> stringResource(Res.string.detail_fav_count_none)
+                            1 -> stringResource(Res.string.detail_fav_count_one)
+                            else -> stringResource(Res.string.detail_fav_count_other, favCount)
+                        },
                     color = InsaneColors.OnBgEmphasis,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
                 )
             }
             Row(
-                Modifier
-                    .fillMaxWidth()
+                Modifier.fillMaxWidth()
                     .padding(top = 10.dp)
                     .clip(RoundedCornerShape(10.dp))
                     .background(if (isFav) InsaneColors.Star else Color.Transparent)
@@ -128,7 +129,10 @@ internal fun DetailDialog(
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    stringResource(if (isFav) Res.string.detail_favorite_active else Res.string.detail_add_to_favorites),
+                    stringResource(
+                        if (isFav) Res.string.detail_favorite_active
+                        else Res.string.detail_add_to_favorites
+                    ),
                     color = if (isFav) Color.Black else InsaneColors.Star,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,

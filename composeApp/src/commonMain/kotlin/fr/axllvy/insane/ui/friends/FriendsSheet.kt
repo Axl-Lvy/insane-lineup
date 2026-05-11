@@ -15,7 +15,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -25,10 +24,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import fr.axllvy.insane.data.Friend
@@ -56,17 +55,17 @@ import fr.axllvy.insane.resources.friends_visibility_on
 import fr.axllvy.insane.resources.snackbar_friend_added
 import fr.axllvy.insane.resources.snackbar_friend_added_default
 import fr.axllvy.insane.ui.InsaneColors
+import kotlin.math.max
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.math.max
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 
 /**
  * Friends bottom-sheet-style overlay. Sections:
- *   1. "My code" — current 6-char code (rotate button + QR), or empty state.
- *   2. "Add a friend" — manual text entry + scan-QR button.
- *   3. Friends list with per-friend visibility toggle + unfriend.
+ * 1. "My code" — current 6-char code (rotate button + QR), or empty state.
+ * 2. "Add a friend" — manual text entry + scan-QR button.
+ * 3. Friends list with per-friend visibility toggle + unfriend.
  */
 @Composable
 fun FriendsSheet(
@@ -93,19 +92,19 @@ fun FriendsSheet(
     }
 
     Box(
-        Modifier
-            .fillMaxSize()
-            .background(InsaneColors.DialogScrim)
-            .clickable(onClick = onClose),
+        Modifier.fillMaxSize().background(InsaneColors.DialogScrim).clickable(onClick = onClose),
         contentAlignment = Alignment.BottomCenter,
     ) {
         Column(
-            Modifier
-                .fillMaxWidth()
+            Modifier.fillMaxWidth()
                 .fillMaxHeight(0.92f)
                 .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))
                 .background(InsaneColors.BgMid)
-                .border(1.dp, InsaneColors.Accent.copy(alpha = 0.4f), RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))
+                .border(
+                    1.dp,
+                    InsaneColors.Accent.copy(alpha = 0.4f),
+                    RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp),
+                )
                 .clickable(enabled = false) {}
                 .padding(horizontal = 18.dp, vertical = 18.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp),
@@ -114,11 +113,7 @@ fun FriendsSheet(
 
             MyCodeSection(
                 code = state.myCode,
-                onRotate = {
-                    ensureDisplayName {
-                        scope.launch { onRotateCode() }
-                    }
-                },
+                onRotate = { ensureDisplayName { scope.launch { onRotateCode() } } },
                 qrRenderer = qrRenderer,
             )
 
@@ -128,20 +123,22 @@ fun FriendsSheet(
                     ensureDisplayName {
                         scope.launch {
                             val result = onRedeem(code)
-                            redeemFeedback = when (result) {
-                                is RedeemResult.Added -> getString(
-                                    Res.string.snackbar_friend_added,
-                                    result.friend.displayName
-                                        ?: getString(Res.string.snackbar_friend_added_default),
-                                )
-                                is RedeemResult.Failed -> result.message
-                            }
+                            redeemFeedback =
+                                when (result) {
+                                    is RedeemResult.Added ->
+                                        getString(
+                                            Res.string.snackbar_friend_added,
+                                            result.friend.displayName
+                                                ?: getString(
+                                                    Res.string.snackbar_friend_added_default
+                                                ),
+                                        )
+                                    is RedeemResult.Failed -> result.message
+                                }
                         }
                     }
                 },
-                onScan = {
-                    ensureDisplayName { onLaunchScanner() }
-                },
+                onScan = { ensureDisplayName { onLaunchScanner() } },
             )
 
             Text(
@@ -159,9 +156,7 @@ fun FriendsSheet(
                 friends = state.friends,
                 visible = state.visibleFriendIds,
                 onToggleVisibility = onSetVisibility,
-                onUnfriend = { id ->
-                    scope.launch { onUnfriend(id) }
-                },
+                onUnfriend = { id -> scope.launch { onUnfriend(id) } },
                 modifier = Modifier.weight(1f, fill = true),
             )
         }
@@ -203,10 +198,7 @@ private fun FriendsHeader(onClose: () -> Unit) {
         )
         Spacer(Modifier.weight(1f))
         Box(
-            Modifier
-                .size(32.dp)
-                .clip(CircleShape)
-                .clickable(onClick = onClose),
+            Modifier.size(32.dp).clip(CircleShape).clickable(onClick = onClose),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
@@ -226,8 +218,7 @@ private fun MyCodeSection(
 ) {
     val ttlSec = useTtlCountdown(code?.expiresAtMs)
     Column(
-        Modifier
-            .fillMaxWidth()
+        Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .background(InsaneColors.Bg.copy(alpha = 0.5f))
             .border(1.dp, InsaneColors.Border, RoundedCornerShape(12.dp))
@@ -251,12 +242,11 @@ private fun MyCodeSection(
             )
             Spacer(Modifier.weight(1f))
             Box(
-                Modifier
-                    .clip(RoundedCornerShape(6.dp))
+                Modifier.clip(RoundedCornerShape(6.dp))
                     .background(InsaneColors.Accent.copy(alpha = 0.18f))
                     .border(1.dp, InsaneColors.Accent.copy(alpha = 0.4f), RoundedCornerShape(6.dp))
                     .clickable(onClick = onRotate)
-                    .padding(horizontal = 8.dp, vertical = 5.dp),
+                    .padding(horizontal = 8.dp, vertical = 5.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -267,7 +257,10 @@ private fun MyCodeSection(
                     )
                     Spacer(Modifier.width(4.dp))
                     Text(
-                        stringResource(if (code == null) Res.string.friends_btn_generate else Res.string.friends_btn_rotate),
+                        stringResource(
+                            if (code == null) Res.string.friends_btn_generate
+                            else Res.string.friends_btn_rotate
+                        ),
                         color = InsaneColors.Accent,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Black,
@@ -330,15 +323,10 @@ private fun useTtlCountdown(expiresAtMs: Long?): Long {
 }
 
 @Composable
-private fun AddFriendSection(
-    feedback: String?,
-    onRedeem: (String) -> Unit,
-    onScan: () -> Unit,
-) {
+private fun AddFriendSection(feedback: String?, onRedeem: (String) -> Unit, onScan: () -> Unit) {
     var input by remember { mutableStateOf("") }
     Column(
-        Modifier
-            .fillMaxWidth()
+        Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .background(InsaneColors.Bg.copy(alpha = 0.5f))
             .border(1.dp, InsaneColors.Border, RoundedCornerShape(12.dp))
@@ -361,26 +349,33 @@ private fun AddFriendSection(
                 onValueChange = { v ->
                     input = v.uppercase().filter { it.isLetterOrDigit() }.take(6)
                 },
-                placeholder = { Text(stringResource(Res.string.friends_code_placeholder), letterSpacing = 4.sp, color = InsaneColors.OnBgFaint) },
+                placeholder = {
+                    Text(
+                        stringResource(Res.string.friends_code_placeholder),
+                        letterSpacing = 4.sp,
+                        color = InsaneColors.OnBgFaint,
+                    )
+                },
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    capitalization = KeyboardCapitalization.Characters,
-                    imeAction = ImeAction.Done,
-                ),
-                colors = TextFieldDefaults.colors(
-                    focusedTextColor = InsaneColors.OnBg,
-                    unfocusedTextColor = InsaneColors.OnBg,
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    focusedIndicatorColor = InsaneColors.Accent,
-                    unfocusedIndicatorColor = InsaneColors.Border,
-                    cursorColor = InsaneColors.Accent,
-                ),
+                keyboardOptions =
+                    KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Characters,
+                        imeAction = ImeAction.Done,
+                    ),
+                colors =
+                    TextFieldDefaults.colors(
+                        focusedTextColor = InsaneColors.OnBg,
+                        unfocusedTextColor = InsaneColors.OnBg,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor = InsaneColors.Accent,
+                        unfocusedIndicatorColor = InsaneColors.Border,
+                        cursorColor = InsaneColors.Accent,
+                    ),
                 modifier = Modifier.weight(1f),
             )
             Box(
-                Modifier
-                    .size(44.dp)
+                Modifier.size(44.dp)
                     .clip(RoundedCornerShape(8.dp))
                     .background(InsaneColors.Accent.copy(alpha = 0.12f))
                     .border(1.dp, InsaneColors.Accent.copy(alpha = 0.45f), RoundedCornerShape(8.dp))
@@ -395,10 +390,12 @@ private fun AddFriendSection(
             }
         }
         Box(
-            Modifier
-                .fillMaxWidth()
+            Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(8.dp))
-                .background(if (input.length == 6) InsaneColors.Accent else InsaneColors.Accent.copy(alpha = 0.2f))
+                .background(
+                    if (input.length == 6) InsaneColors.Accent
+                    else InsaneColors.Accent.copy(alpha = 0.2f)
+                )
                 .clickable(enabled = input.length == 6) {
                     onRedeem(input)
                     input = ""
@@ -415,11 +412,7 @@ private fun AddFriendSection(
             )
         }
         AnimatedVisibility(feedback != null) {
-            Text(
-                feedback.orEmpty(),
-                color = InsaneColors.OnBgDim,
-                fontSize = 11.sp,
-            )
+            Text(feedback.orEmpty(), color = InsaneColors.OnBgDim, fontSize = 11.sp)
         }
     }
 }
@@ -473,8 +466,7 @@ private fun FriendRow(
 ) {
     val color = friendColor(friend.id)
     Row(
-        Modifier
-            .fillMaxWidth()
+        Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
             .background(InsaneColors.Bg.copy(alpha = 0.5f))
             .border(1.dp, if (isVisible) color else InsaneColors.Border, RoundedCornerShape(10.dp))
@@ -484,8 +476,7 @@ private fun FriendRow(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Box(
-            Modifier
-                .size(10.dp)
+            Modifier.size(10.dp)
                 .clip(CircleShape)
                 .background(if (isVisible) color else color.copy(alpha = 0.25f))
                 .border(1.dp, color, CircleShape)
@@ -498,17 +489,17 @@ private fun FriendRow(
             modifier = Modifier.weight(1f),
         )
         Text(
-            stringResource(if (isVisible) Res.string.friends_visibility_on else Res.string.friends_visibility_off),
+            stringResource(
+                if (isVisible) Res.string.friends_visibility_on
+                else Res.string.friends_visibility_off
+            ),
             color = if (isVisible) color else InsaneColors.OnBgDim,
             fontSize = 9.sp,
             fontWeight = FontWeight.Black,
             letterSpacing = 1.4.sp,
         )
         Box(
-            Modifier
-                .size(28.dp)
-                .clip(CircleShape)
-                .clickable(onClick = onUnfriend),
+            Modifier.size(28.dp).clip(CircleShape).clickable(onClick = onUnfriend),
             contentAlignment = Alignment.Center,
         ) {
             Icon(

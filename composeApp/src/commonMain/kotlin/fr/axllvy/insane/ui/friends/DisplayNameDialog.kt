@@ -26,8 +26,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import fr.axllvy.insane.resources.Res
@@ -40,27 +40,19 @@ import fr.axllvy.insane.ui.InsaneColors
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * One-shot prompt that appears the first time a user shares or redeems a code.
- * Submitting persists the name on the profile; cancelling abandons whichever
- * action triggered it (the caller's `then` closure isn't invoked).
+ * One-shot prompt that appears the first time a user shares or redeems a code. Submitting persists
+ * the name on the profile; cancelling abandons whichever action triggered it (the caller's `then`
+ * closure isn't invoked).
  */
 @Composable
-fun DisplayNameDialog(
-    initial: String,
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit,
-) {
+fun DisplayNameDialog(initial: String, onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
     var name by remember { mutableStateOf(initial) }
     Box(
-        Modifier
-            .fillMaxSize()
-            .background(InsaneColors.DialogScrim)
-            .clickable(onClick = onDismiss),
+        Modifier.fillMaxSize().background(InsaneColors.DialogScrim).clickable(onClick = onDismiss),
         contentAlignment = Alignment.Center,
     ) {
         Column(
-            Modifier
-                .padding(24.dp)
+            Modifier.padding(24.dp)
                 .clip(RoundedCornerShape(14.dp))
                 .background(InsaneColors.BgMid)
                 .border(1.dp, InsaneColors.Accent, RoundedCornerShape(14.dp))
@@ -84,33 +76,48 @@ fun DisplayNameDialog(
                 value = name,
                 onValueChange = { name = it.take(40) },
                 singleLine = true,
-                placeholder = { Text(stringResource(Res.string.display_name_placeholder), color = InsaneColors.OnBgFaint) },
+                placeholder = {
+                    Text(
+                        stringResource(Res.string.display_name_placeholder),
+                        color = InsaneColors.OnBgFaint,
+                    )
+                },
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                colors = TextFieldDefaults.colors(
-                    focusedTextColor = InsaneColors.OnBg,
-                    unfocusedTextColor = InsaneColors.OnBg,
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    focusedIndicatorColor = InsaneColors.Accent,
-                    unfocusedIndicatorColor = InsaneColors.Border,
-                    cursorColor = InsaneColors.Accent,
-                ),
+                colors =
+                    TextFieldDefaults.colors(
+                        focusedTextColor = InsaneColors.OnBg,
+                        unfocusedTextColor = InsaneColors.OnBg,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor = InsaneColors.Accent,
+                        unfocusedIndicatorColor = InsaneColors.Border,
+                        cursorColor = InsaneColors.Accent,
+                    ),
                 modifier = Modifier.fillMaxWidth(),
             )
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 Box(
-                    Modifier
-                        .clip(RoundedCornerShape(8.dp))
+                    Modifier.clip(RoundedCornerShape(8.dp))
                         .clickable(onClick = onDismiss)
-                        .padding(horizontal = 14.dp, vertical = 8.dp),
-                ) { Text(stringResource(Res.string.general_cancel), color = InsaneColors.OnBgDim, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.4.sp) }
+                        .padding(horizontal = 14.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        stringResource(Res.string.general_cancel),
+                        color = InsaneColors.OnBgDim,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.4.sp,
+                    )
+                }
                 Spacer(Modifier.width(8.dp))
                 Box(
-                    Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(if (name.isNotBlank()) InsaneColors.Accent else InsaneColors.Accent.copy(alpha = 0.2f))
+                    Modifier.clip(RoundedCornerShape(8.dp))
+                        .background(
+                            if (name.isNotBlank()) InsaneColors.Accent
+                            else InsaneColors.Accent.copy(alpha = 0.2f)
+                        )
                         .clickable(enabled = name.isNotBlank()) { onConfirm(name.trim()) }
-                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                        .padding(horizontal = 14.dp, vertical = 8.dp)
                 ) {
                     Text(
                         stringResource(Res.string.general_save),

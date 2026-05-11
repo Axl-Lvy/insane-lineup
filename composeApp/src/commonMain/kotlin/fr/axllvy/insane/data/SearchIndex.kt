@@ -1,16 +1,10 @@
 package fr.axllvy.insane.data
 
-data class SetMatch(
-    val day: DayKey,
-    val stage: StageKey,
-    val set: SetEntry,
-) {
+data class SetMatch(val day: DayKey, val stage: StageKey, val set: SetEntry) {
     fun key(): String = "${day.id}|${stage.name}|${set.s}|${set.a}"
 }
 
-class SearchIndex private constructor(
-    private val entries: List<Entry>,
-) {
+class SearchIndex private constructor(private val entries: List<Entry>) {
     private data class Entry(val token: String, val match: SetMatch)
 
     fun query(raw: String): List<SetMatch> {

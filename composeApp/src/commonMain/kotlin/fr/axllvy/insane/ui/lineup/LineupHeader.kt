@@ -86,8 +86,7 @@ internal fun Header(
     val accent = InsaneColors.Accent
     val gridLine = InsaneColors.GridLine
     Column(
-        Modifier
-            .fillMaxWidth()
+        Modifier.fillMaxWidth()
             .drawBehind { drawHeaderBackground(headerBg, accent, gridLine) }
             .padding(start = 14.dp, end = 12.dp, top = 12.dp, bottom = 14.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -112,18 +111,15 @@ internal fun Header(
     }
 }
 
-private fun DrawScope.drawHeaderBackground(
-    headerBg: Color,
-    accent: Color,
-    gridLine: Color,
-) {
+private fun DrawScope.drawHeaderBackground(headerBg: Color, accent: Color, gridLine: Color) {
     drawRect(headerBg)
     drawRect(
-        brush = Brush.radialGradient(
-            colors = listOf(accent.copy(alpha = 0.35f), accent.copy(alpha = 0f)),
-            center = Offset(size.width * 0.05f, 0f),
-            radius = size.maxDimension * 0.85f,
-        ),
+        brush =
+            Brush.radialGradient(
+                colors = listOf(accent.copy(alpha = 0.35f), accent.copy(alpha = 0f)),
+                center = Offset(size.width * 0.05f, 0f),
+                radius = size.maxDimension * 0.85f,
+            )
     )
     val gap = 3.dp.toPx()
     var y = 0f
@@ -153,26 +149,17 @@ private fun StatusBar(
     onOpenFriends: () -> Unit,
     onOpenSearch: () -> Unit,
 ) {
-    val pulse by rememberInfiniteTransition(label = "header-pulse").animateFloat(
-        initialValue = 0.35f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(900),
-            repeatMode = RepeatMode.Reverse,
-        ),
-        label = "live-dot",
-    )
-    Row(
-        Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            Modifier
-                .alpha(pulse)
-                .size(7.dp)
-                .clip(CircleShape)
-                .background(LiveMagenta),
-        )
+    val pulse by
+        rememberInfiniteTransition(label = "header-pulse")
+            .animateFloat(
+                initialValue = 0.35f,
+                targetValue = 1f,
+                animationSpec =
+                    infiniteRepeatable(animation = tween(900), repeatMode = RepeatMode.Reverse),
+                label = "live-dot",
+            )
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.alpha(pulse).size(7.dp).clip(CircleShape).background(LiveMagenta))
         Spacer(Modifier.width(7.dp))
         Text(
             "LIVE · TX.026",
@@ -182,12 +169,7 @@ private fun StatusBar(
             letterSpacing = 1.8.sp,
         )
         Spacer(Modifier.width(10.dp))
-        Box(
-            Modifier
-                .height(10.dp)
-                .width(1.dp)
-                .background(InsaneColors.OnBgFaint),
-        )
+        Box(Modifier.height(10.dp).width(1.dp).background(InsaneColors.OnBgFaint))
         Spacer(Modifier.width(10.dp))
         Text(
             "//  BEYOND  REALITY",
@@ -203,7 +185,8 @@ private fun StatusBar(
         HeaderIconButton(
             icon = { tint ->
                 Icon(
-                    if (notificationsEnabled) Icons.Filled.Notifications else Icons.Outlined.NotificationsNone,
+                    if (notificationsEnabled) Icons.Filled.Notifications
+                    else Icons.Outlined.NotificationsNone,
                     contentDescription = notificationsCd,
                     tint = tint,
                     modifier = Modifier.size(16.dp),
@@ -215,13 +198,27 @@ private fun StatusBar(
         )
         Spacer(Modifier.width(8.dp))
         HeaderIconButton(
-            icon = { tint -> Icon(Icons.Filled.Search, contentDescription = searchCd, tint = tint, modifier = Modifier.size(16.dp)) },
+            icon = { tint ->
+                Icon(
+                    Icons.Filled.Search,
+                    contentDescription = searchCd,
+                    tint = tint,
+                    modifier = Modifier.size(16.dp),
+                )
+            },
             enabled = true,
             onClick = onOpenSearch,
         )
         Spacer(Modifier.width(8.dp))
         HeaderIconButton(
-            icon = { tint -> Icon(Icons.Filled.People, contentDescription = friendsCd, tint = tint, modifier = Modifier.size(16.dp)) },
+            icon = { tint ->
+                Icon(
+                    Icons.Filled.People,
+                    contentDescription = friendsCd,
+                    tint = tint,
+                    modifier = Modifier.size(16.dp),
+                )
+            },
             enabled = true,
             onClick = onOpenFriends,
         )
@@ -229,9 +226,18 @@ private fun StatusBar(
         HeaderIconButton(
             icon = { tint ->
                 if (refreshing) {
-                    CircularProgressIndicator(strokeWidth = 1.5.dp, color = tint, modifier = Modifier.size(14.dp))
+                    CircularProgressIndicator(
+                        strokeWidth = 1.5.dp,
+                        color = tint,
+                        modifier = Modifier.size(14.dp),
+                    )
                 } else {
-                    Icon(Icons.Filled.Refresh, contentDescription = refreshCd, tint = tint, modifier = Modifier.size(16.dp))
+                    Icon(
+                        Icons.Filled.Refresh,
+                        contentDescription = refreshCd,
+                        tint = tint,
+                        modifier = Modifier.size(16.dp),
+                    )
                 }
             },
             enabled = !refreshing,
@@ -257,15 +263,16 @@ private fun TitleRow() {
             fontWeight = FontWeight.Black,
             fontStyle = FontStyle.Italic,
             letterSpacing = (-1.5).sp,
-            modifier = Modifier.drawBehind {
-                val slabH = size.height * 0.18f
-                val slabY = size.height * 0.58f
-                drawRect(
-                    color = accentSlab.copy(alpha = 0.30f),
-                    topLeft = Offset(-2.dp.toPx(), slabY),
-                    size = Size(size.width + 4.dp.toPx(), slabH),
-                )
-            },
+            modifier =
+                Modifier.drawBehind {
+                    val slabH = size.height * 0.18f
+                    val slabY = size.height * 0.58f
+                    drawRect(
+                        color = accentSlab.copy(alpha = 0.30f),
+                        topLeft = Offset(-2.dp.toPx(), slabY),
+                        size = Size(size.width + 4.dp.toPx(), slabH),
+                    )
+                },
         )
         Spacer(Modifier.width(10.dp))
         Column(Modifier.padding(bottom = 7.dp)) {
@@ -277,12 +284,7 @@ private fun TitleRow() {
                 letterSpacing = 4.sp,
             )
             Spacer(Modifier.height(2.dp))
-            Text(
-                "✦ ED.026",
-                color = InsaneColors.OnBgDim,
-                fontSize = 10.sp,
-                letterSpacing = 1.5.sp,
-            )
+            Text("✦ ED.026", color = InsaneColors.OnBgDim, fontSize = 10.sp, letterSpacing = 1.5.sp)
         }
     }
 }
@@ -296,26 +298,22 @@ private fun DaySelector(day: DayKey, onDayChange: (DayKey) -> Unit) {
             val labelColor = if (active) Color.White else InsaneColors.OnBg
             val dateColor = if (active) Color.White.copy(alpha = 0.78f) else InsaneColors.OnBgDim
             Box(
-                Modifier
-                    .weight(1f)
+                Modifier.weight(1f)
                     .height(56.dp)
                     .background(bg)
                     .border(1.dp, if (active) InsaneColors.Accent else InsaneColors.Border)
-                    .clickable { onDayChange(d) },
+                    .clickable { onDayChange(d) }
             ) {
                 if (active) {
                     Box(
-                        Modifier
-                            .align(Alignment.TopStart)
+                        Modifier.align(Alignment.TopStart)
                             .height(3.dp)
                             .fillMaxWidth()
-                            .background(LiveMagenta),
+                            .background(LiveMagenta)
                     )
                 }
                 Column(
-                    Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 10.dp, vertical = 7.dp),
+                    Modifier.fillMaxSize().padding(horizontal = 10.dp, vertical = 7.dp),
                     verticalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Text(
@@ -369,17 +367,14 @@ private fun StageFilters(
             val meta = stageMeta.getValue(s)
             val hidden = s in hiddenStages
             Row(
-                Modifier
-                    .clickable { onToggleStage(s) }
-                    .padding(vertical = 2.dp),
+                Modifier.clickable { onToggleStage(s) }.padding(vertical = 2.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(5.dp),
             ) {
                 Box(
-                    Modifier
-                        .size(8.dp)
+                    Modifier.size(8.dp)
                         .background(if (hidden) Color.Transparent else meta.color)
-                        .border(1.5.dp, if (hidden) meta.color.copy(alpha = 0.45f) else meta.color),
+                        .border(1.5.dp, if (hidden) meta.color.copy(alpha = 0.45f) else meta.color)
                 )
                 Text(
                     meta.label.uppercase(),
@@ -392,8 +387,7 @@ private fun StageFilters(
         }
         Spacer(Modifier.weight(1f))
         Row(
-            Modifier
-                .background(if (favsOnly) InsaneColors.Star else Color.Transparent)
+            Modifier.background(if (favsOnly) InsaneColors.Star else Color.Transparent)
                 .border(1.dp, InsaneColors.Star)
                 .clickable { onToggleFavsOnly() }
                 .padding(horizontal = 8.dp, vertical = 4.dp),
@@ -426,8 +420,7 @@ private fun HeaderIconButton(
 ) {
     val tint = InsaneColors.Accent
     Box(
-        Modifier
-            .size(34.dp)
+        Modifier.size(34.dp)
             .background(tint.copy(alpha = if (active) 0.32f else 0.12f))
             .border(1.dp, tint.copy(alpha = if (active) 0.85f else 0.45f))
             .clickable(enabled = enabled, onClick = onClick),

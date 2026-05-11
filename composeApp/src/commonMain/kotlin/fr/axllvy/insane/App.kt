@@ -20,9 +20,9 @@ import coil3.network.ktor3.KtorNetworkFetcherFactory
 import coil3.request.crossfade
 import fr.axllvy.insane.data.ArtistImages
 import fr.axllvy.insane.data.FavoritesRepository
-import fr.axllvy.insane.data.LocalArtistImages
 import fr.axllvy.insane.data.FriendsRepository
 import fr.axllvy.insane.data.LineupRepository
+import fr.axllvy.insane.data.LocalArtistImages
 import fr.axllvy.insane.data.SupabaseLineupClient
 import fr.axllvy.insane.data.auth.AuthClient
 import fr.axllvy.insane.data.auth.SessionStore
@@ -69,9 +69,7 @@ fun App() {
     }
 
     // Manifest is a tiny (~6 kB) bundled JSON; load once at startup.
-    val artistImages by produceState(ArtistImages.Empty) {
-        value = ArtistImages.load()
-    }
+    val artistImages by produceState(ArtistImages.Empty) { value = ArtistImages.load() }
 
     InsaneTheme {
         CompositionLocalProvider(LocalArtistImages provides artistImages) {
@@ -114,17 +112,15 @@ private fun buildDependencies(): AppDependencies {
     val settings = createSettings()
     val auth = AuthClient(http)
     val session = SessionStore(settings = settings, auth = auth, nowMs = ::nowMs)
-    val lineup = LineupRepository(
-        client = SupabaseLineupClient(http, session),
-        settings = settings,
-    )
+    val lineup = LineupRepository(client = SupabaseLineupClient(http, session), settings = settings)
     val favorites = FavoritesRepository(http, session, settings)
     val friends = FriendsRepository(http, session, ::nowMs)
-    val notifications = NotificationsController(
-        scheduler = createNotificationScheduler(),
-        settings = settings,
-        nowMs = ::nowMs,
-    )
+    val notifications =
+        NotificationsController(
+            scheduler = createNotificationScheduler(),
+            settings = settings,
+            nowMs = ::nowMs,
+        )
     return AppDependencies(session, lineup, favorites, friends, notifications)
 }
 

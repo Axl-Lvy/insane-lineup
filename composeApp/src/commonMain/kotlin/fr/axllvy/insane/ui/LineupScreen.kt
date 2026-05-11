@@ -95,11 +95,12 @@ fun LineupScreen(
     val triggerRefresh: () -> Unit = {
         if (!state.refreshing) {
             scope.launch {
-                val msg = when (onRefresh()) {
-                    RefreshOutcome.Refreshed -> getString(Res.string.snackbar_lineup_refreshed)
-                    RefreshOutcome.Offline -> getString(Res.string.snackbar_offline)
-                    is RefreshOutcome.Error -> getString(Res.string.snackbar_refresh_failed)
-                }
+                val msg =
+                    when (onRefresh()) {
+                        RefreshOutcome.Refreshed -> getString(Res.string.snackbar_lineup_refreshed)
+                        RefreshOutcome.Offline -> getString(Res.string.snackbar_offline)
+                        is RefreshOutcome.Error -> getString(Res.string.snackbar_refresh_failed)
+                    }
                 snackbarHostState.currentSnackbarData?.dismiss()
                 snackbarHostState.showSnackbar(msg)
             }
@@ -108,15 +109,17 @@ fun LineupScreen(
 
     val toggleNotifications: () -> Unit = {
         scope.launch {
-            val msg = if (notificationsEnabled) {
-                notifications.disable()
-                getString(Res.string.snackbar_notifications_disabled)
-            } else {
-                when (notifications.enable()) {
-                    EnableResult.Enabled -> getString(Res.string.snackbar_notifications_enabled)
-                    EnableResult.PermissionDenied -> getString(Res.string.snackbar_notifications_denied)
+            val msg =
+                if (notificationsEnabled) {
+                    notifications.disable()
+                    getString(Res.string.snackbar_notifications_disabled)
+                } else {
+                    when (notifications.enable()) {
+                        EnableResult.Enabled -> getString(Res.string.snackbar_notifications_enabled)
+                        EnableResult.PermissionDenied ->
+                            getString(Res.string.snackbar_notifications_denied)
+                    }
                 }
-            }
             snackbarHostState.currentSnackbarData?.dismiss()
             snackbarHostState.showSnackbar(msg)
         }
@@ -196,12 +199,13 @@ fun LineupScreen(
 
         if (showFriends) {
             FriendsSheet(
-                state = FriendsSheetState(
-                    myDisplayName = myDisplayName,
-                    myCode = myCode,
-                    friends = friends,
-                    visibleFriendIds = visibleFriends,
-                ),
+                state =
+                    FriendsSheetState(
+                        myDisplayName = myDisplayName,
+                        myCode = myCode,
+                        friends = friends,
+                        visibleFriendIds = visibleFriends,
+                    ),
                 onClose = { showFriends = false },
                 onRotateCode = {
                     val rotated = friendsRepo.rotateCode()
@@ -231,13 +235,16 @@ fun LineupScreen(
                             val result = friendsRepo.redeem(code)
                             snackbarHostState.showSnackbar(
                                 when (result) {
-                                    is RedeemResult.Added -> getString(
-                                        Res.string.snackbar_friend_added,
-                                        result.friend.displayName
-                                            ?: getString(Res.string.snackbar_friend_added_default),
-                                    )
+                                    is RedeemResult.Added ->
+                                        getString(
+                                            Res.string.snackbar_friend_added,
+                                            result.friend.displayName
+                                                ?: getString(
+                                                    Res.string.snackbar_friend_added_default
+                                                ),
+                                        )
                                     is RedeemResult.Failed -> result.message
-                                },
+                                }
                             )
                         }
                     }
@@ -249,6 +256,5 @@ fun LineupScreen(
 }
 
 @Composable
-private fun verticalGradient() = Brush.verticalGradient(
-    listOf(InsaneColors.BgTop, InsaneColors.BgMid, InsaneColors.Bg),
-)
+private fun verticalGradient() =
+    Brush.verticalGradient(listOf(InsaneColors.BgTop, InsaneColors.BgMid, InsaneColors.Bg))

@@ -5,4 +5,6 @@ import com.russhwolf.settings.Settings
 import platform.Foundation.NSUserDefaults
 
 actual fun createSettings(): Settings =
-    NSUserDefaultsSettings(NSUserDefaults(suiteName = "fr.axllvy.insane") ?: NSUserDefaults.standardUserDefaults)
+    NSUserDefaultsSettings(
+        NSUserDefaults(suiteName = "fr.axllvy.insane") ?: NSUserDefaults.standardUserDefaults
+    )
