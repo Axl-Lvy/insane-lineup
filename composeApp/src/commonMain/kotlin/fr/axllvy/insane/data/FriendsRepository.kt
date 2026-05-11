@@ -85,17 +85,16 @@ class FriendsRepository(
                 parameter("select", "b_id,profile:profiles!friendships_b_id_fkey(display_name)")
             }
         val rows = json.parseToJsonElement(response.bodyAsText()) as? JsonArray ?: return
-        _friends.value =
-            rows.mapNotNull { row ->
-                val obj = row as? JsonObject ?: return@mapNotNull null
-                val id = obj["b_id"]?.jsonPrimitive?.content ?: return@mapNotNull null
-                val displayName =
-                    (obj["profile"] as? JsonObject)
-                        ?.get("display_name")
-                        ?.jsonPrimitive
-                        ?.contentOrNullSafe()
-                Friend(id = id, displayName = displayName)
-            }
+        _friends.value = rows.mapNotNull { row ->
+            val obj = row as? JsonObject ?: return@mapNotNull null
+            val id = obj["b_id"]?.jsonPrimitive?.content ?: return@mapNotNull null
+            val displayName =
+                (obj["profile"] as? JsonObject)
+                    ?.get("display_name")
+                    ?.jsonPrimitive
+                    ?.contentOrNullSafe()
+            Friend(id = id, displayName = displayName)
+        }
     }
 
     /** Fetch every friend's favorites (RLS scopes this to friends only). */

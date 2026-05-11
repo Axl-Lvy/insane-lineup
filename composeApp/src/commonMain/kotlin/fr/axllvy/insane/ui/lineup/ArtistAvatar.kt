@@ -39,13 +39,12 @@ fun ArtistAvatar(name: String, size: Dp, borderColor: Color) {
     val imageUrl = images.urlFor(name)
     val externalUrl = images.soundcloudUrlFor(name)
     val uriHandler = LocalUriHandler.current
-    val onClick: (() -> Unit)? =
-        externalUrl?.let {
-            {
-                runCatching { uriHandler.openUri(it) }
-                    .onFailure { e -> logE("openUri($externalUrl) failed: ${e.message}") }
-            }
+    val onClick: (() -> Unit)? = externalUrl?.let {
+        {
+            runCatching { uriHandler.openUri(it) }
+                .onFailure { e -> logE("openUri($externalUrl) failed: ${e.message}") }
         }
+    }
     val base =
         Modifier.size(size)
             .clip(CircleShape)

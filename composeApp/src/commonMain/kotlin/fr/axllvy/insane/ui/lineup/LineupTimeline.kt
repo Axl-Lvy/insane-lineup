@@ -179,8 +179,9 @@ private fun StageColumn(
             val key = "${day.id}|${stage.name}|${set.s}|${set.a}"
             val isFav = key in favs
             val dimmed = favsOnly && !isFav
-            val friendsWhoLikeIt =
-                visibleFriends.filter { friendFavorites[it].orEmpty().contains(key) }
+            val friendsWhoLikeIt = visibleFriends.filter {
+                friendFavorites[it].orEmpty().contains(key)
+            }
             val hasFriendInterest = friendsWhoLikeIt.isNotEmpty()
             val favCount = favCounts[key] ?: 0
 

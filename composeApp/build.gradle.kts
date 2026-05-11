@@ -1,6 +1,6 @@
 import java.util.Properties
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -11,9 +11,7 @@ plugins {
 }
 
 kotlin {
-    androidTarget {
-        compilerOptions { jvmTarget.set(JvmTarget.JVM_11) }
-    }
+    androidTarget { compilerOptions { jvmTarget.set(JvmTarget.JVM_11) } }
 
     listOf(iosX64(), iosArm64(), iosSimulatorArm64()).forEach { iosTarget ->
         iosTarget.binaries.framework {
@@ -25,11 +23,7 @@ kotlin {
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         outputModuleName.set("insane-lineup")
-        browser {
-            commonWebpackConfig {
-                outputFileName = "insane-lineup.js"
-            }
-        }
+        browser { commonWebpackConfig { outputFileName = "insane-lineup.js" } }
         binaries.executable()
     }
 
@@ -64,24 +58,14 @@ kotlin {
             implementation(libs.play.services.code.scanner)
         }
 
-        iosMain.dependencies {
-            implementation(libs.ktor.client.darwin)
-        }
+        iosMain.dependencies { implementation(libs.ktor.client.darwin) }
 
-        val wasmJsMain by getting {
-            dependencies {
-                implementation(libs.ktor.client.js)
-            }
-        }
+        val wasmJsMain by getting { dependencies { implementation(libs.ktor.client.js) } }
 
-        commonTest.dependencies {
-            implementation(kotlin("test"))
-        }
+        commonTest.dependencies { implementation(kotlin("test")) }
     }
 
-    compilerOptions {
-        freeCompilerArgs.add("-Xexpect-actual-classes")
-    }
+    compilerOptions { freeCompilerArgs.add("-Xexpect-actual-classes") }
 }
 
 compose.resources {
@@ -109,9 +93,8 @@ android {
 
     val keystorePropsFile = rootProject.file("keystore/keystore.properties")
     if (keystorePropsFile.exists()) {
-        val keystoreProps = Properties().apply {
-            keystorePropsFile.inputStream().use { stream -> load(stream) }
-        }
+        val keystoreProps =
+            Properties().apply { keystorePropsFile.inputStream().use { stream -> load(stream) } }
         signingConfigs {
             create("release") {
                 storeFile = rootProject.file("keystore/keystore.jks")
@@ -120,11 +103,7 @@ android {
                 keyPassword = keystoreProps.getProperty("keyPassword")
             }
         }
-        buildTypes {
-            getByName("release") {
-                signingConfig = signingConfigs.getByName("release")
-            }
-        }
+        buildTypes { getByName("release") { signingConfig = signingConfigs.getByName("release") } }
     }
 
     compileOptions {

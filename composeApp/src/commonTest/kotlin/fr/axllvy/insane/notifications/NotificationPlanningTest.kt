@@ -80,7 +80,8 @@ class NotificationPlanningTest {
         val sameDayKey =
             favKey(DayKey.JEU, StageKey.MIRAGE, lineup[DayKey.JEU]!![StageKey.MIRAGE]!![1])
         // Ven 01:30 (post-midnight) — date rolls to May 16 (the morning after ven).
-        val nextDayKey = favKey(DayKey.VEN, StageKey.CLOUD, lineup[DayKey.VEN]!![StageKey.CLOUD]!![0])
+        val nextDayKey =
+            favKey(DayKey.VEN, StageKey.CLOUD, lineup[DayKey.VEN]!![StageKey.CLOUD]!![0])
         val now = epoch(2026, Month.MAY, 14, 12, 0)
 
         val out =

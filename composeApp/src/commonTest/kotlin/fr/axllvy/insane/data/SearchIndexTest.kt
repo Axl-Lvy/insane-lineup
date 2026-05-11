@@ -17,8 +17,7 @@ class SearchIndexTest {
                         ),
                     StageKey.CLOUD to listOf(SetEntry("18:00", "19:00", "Söme Ärtist")),
                 ),
-            DayKey.VEN to
-                mapOf(StageKey.ALTF4 to listOf(SetEntry("01:00", "02:00", "Kichta"))),
+            DayKey.VEN to mapOf(StageKey.ALTF4 to listOf(SetEntry("01:00", "02:00", "Kichta"))),
         )
 
     @Test

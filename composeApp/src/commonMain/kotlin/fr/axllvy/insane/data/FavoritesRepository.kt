@@ -143,14 +143,13 @@ class FavoritesRepository(
             if (ok) succeeded += key
         }
 
-        val canFetch =
-            mutex.withLock {
-                // Only drop ops we successfully flushed *and* that haven't been
-                // superseded by a toggle that landed mid-flush.
-                succeeded.forEach { k -> if (pending[k] == snapshot[k]) pending.remove(k) }
-                persist(_favorites.value)
-                pending.isEmpty()
-            }
+        val canFetch = mutex.withLock {
+            // Only drop ops we successfully flushed *and* that haven't been
+            // superseded by a toggle that landed mid-flush.
+            succeeded.forEach { k -> if (pending[k] == snapshot[k]) pending.remove(k) }
+            persist(_favorites.value)
+            pending.isEmpty()
+        }
         if (!canFetch) return
 
         val remote = runCatching { fetchRemote(me) }.getOrNull() ?: return
