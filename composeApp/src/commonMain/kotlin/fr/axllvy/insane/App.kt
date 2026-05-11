@@ -110,6 +110,7 @@ fun App() {
                         val outcome = deps.lineup.refresh(::nowMs)
                         runCatching { deps.favorites.sync() }
                         runCatching { deps.favorites.loadCounts() }
+                        runCatching { deps.friends.loadAll() }
                         outcome
                     },
                     onAdminUnlock = {
