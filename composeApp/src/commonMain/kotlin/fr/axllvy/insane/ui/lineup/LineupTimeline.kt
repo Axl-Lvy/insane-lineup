@@ -235,21 +235,12 @@ private fun StageColumn(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
-                if (isFav || favCount > 0 || hasFriendInterest) {
+                if (isFav || favCount > 0) {
                     Row(
                         modifier = Modifier.align(Alignment.TopEnd),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(3.dp),
                     ) {
-                        if (hasFriendInterest && !dimmed) {
-                            friendsWhoLikeIt.take(3).forEach { id ->
-                                Box(
-                                    Modifier.size(6.dp)
-                                        .clip(CircleShape)
-                                        .background(friendColor(id))
-                                )
-                            }
-                        }
                         if (favCount > 0) {
                             Text(
                                 favCount.toString(),
@@ -265,6 +256,16 @@ private fun StageColumn(
                                 tint = InsaneColors.Star,
                                 modifier = Modifier.size(11.dp),
                             )
+                        }
+                    }
+                }
+                if (hasFriendInterest && !dimmed) {
+                    Row(
+                        modifier = Modifier.align(Alignment.BottomStart),
+                        horizontalArrangement = Arrangement.spacedBy(3.dp),
+                    ) {
+                        friendsWhoLikeIt.take(4).forEach { id ->
+                            Box(Modifier.size(6.dp).clip(CircleShape).background(friendColor(id)))
                         }
                     }
                 }
