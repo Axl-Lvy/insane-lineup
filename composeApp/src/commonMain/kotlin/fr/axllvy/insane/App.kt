@@ -152,5 +152,3 @@ private fun buildDependencies(): AppDependencies {
     val admin = AdminController(supabase)
     return AppDependencies(supabase, lineup, favorites, friends, notifications, admin)
 }
-
-expect fun nowMs(): Long

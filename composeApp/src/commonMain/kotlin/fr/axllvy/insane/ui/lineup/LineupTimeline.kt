@@ -45,6 +45,7 @@ import fr.axllvy.insane.data.LineupState
 import fr.axllvy.insane.data.SetEntry
 import fr.axllvy.insane.data.StageKey
 import fr.axllvy.insane.data.timeToMin
+import fr.axllvy.insane.isPullToRefreshSupported
 import fr.axllvy.insane.ui.InsaneColors
 import fr.axllvy.insane.ui.friends.friendColor
 import fr.axllvy.insane.ui.stageMeta
@@ -90,11 +91,7 @@ internal fun Timeline(
         scrollState.animateScrollTo(target)
     }
 
-    PullToRefreshBox(
-        isRefreshing = state.refreshing,
-        onRefresh = onRefresh,
-        modifier = modifier.fillMaxWidth(),
-    ) {
+    val content: @Composable () -> Unit = {
         Box(
             Modifier.fillMaxWidth()
                 .verticalScroll(scrollState)
@@ -125,6 +122,18 @@ internal fun Timeline(
                 }
             }
         }
+    }
+
+    if (isPullToRefreshSupported) {
+        PullToRefreshBox(
+            isRefreshing = state.refreshing,
+            onRefresh = onRefresh,
+            modifier = modifier.fillMaxWidth(),
+        ) {
+            content()
+        }
+    } else {
+        Box(modifier.fillMaxWidth()) { content() }
     }
 }
 
