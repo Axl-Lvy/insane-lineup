@@ -73,6 +73,10 @@ kotlin {
                 implementation(libs.ktor.client.js)
             }
         }
+
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+        }
     }
 
     compilerOptions {
