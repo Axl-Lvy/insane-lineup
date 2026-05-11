@@ -1,14 +1,12 @@
 package fr.axllvy.insane.data
 
 import com.russhwolf.settings.Settings
-import fr.axllvy.insane.Config
-import fr.axllvy.insane.data.auth.SessionStore
 import fr.axllvy.insane.logE
-import io.ktor.client.HttpClient
-import io.ktor.client.request.header
-import io.ktor.client.request.parameter
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,13 +14,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonArray
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.long
-import kotlinx.serialization.json.put
 
 private const val CACHE_KEY = "favorites_v1"
 private const val PENDING_KEY = "favorites_pending_v1"
@@ -37,11 +28,7 @@ private const val OWNER_KEY = "favorites_owner_v1"
  * intent has been acknowledged. Single-device offline edits round-trip safely; multi-device
  * divergence is last-sync-wins (acceptable here — rows carry no `updated_at` for per-edit LWW).
  */
-class FavoritesRepository(
-    private val http: HttpClient,
-    private val session: SessionStore,
-    private val settings: Settings,
-) {
+class FavoritesRepository(private val supabase: SupabaseClient, private val settings: Settings) {
     private val _favorites = MutableStateFlow<Set<String>>(emptySet())
     val favorites: StateFlow<Set<String>> = _favorites.asStateFlow()
 
@@ -61,13 +48,16 @@ class FavoritesRepository(
         isLenient = true
     }
 
+    private val userId: String?
+        get() = supabase.auth.currentUserOrNull()?.id
+
     /**
      * Hydrate the flow from disk. If the cached owner doesn't match the current session we wipe —
      * prevents a previous anonymous identity's favorites from leaking into a freshly minted
      * session.
      */
     fun loadFromCache() {
-        val me = session.userId
+        val me = userId
         val cachedOwner = settings.getStringOrNull(OWNER_KEY)
         if (me == null || cachedOwner == null || cachedOwner != me) {
             settings.remove(CACHE_KEY)
@@ -123,7 +113,7 @@ class FavoritesRepository(
      * — a second caller will see an empty queue if the first already drained it.
      */
     suspend fun sync() {
-        val me = session.userId ?: session.requireAccessToken().let { session.userId } ?: return
+        val me = userId ?: return
 
         if (settings.getStringOrNull(OWNER_KEY) != me) {
             settings.putString(OWNER_KEY, me)
@@ -165,21 +155,8 @@ class FavoritesRepository(
 
     /** Pull the per-set aggregate counts across every user. Safe to call alone. */
     suspend fun loadCounts() {
-        val response =
-            http.pgPost(session, "/rest/v1/rpc/favorite_counts", schema = Config.INSANE_SCHEMA) {
-                setBody(buildJsonObject { /* no args */ })
-            }
-        val rows = json.parseToJsonElement(response.bodyAsText()) as? JsonArray ?: return
-        val parsed =
-            rows
-                .mapNotNull { row ->
-                    val obj = row as? JsonObject ?: return@mapNotNull null
-                    val key = obj["fav_key"]?.jsonPrimitive?.content ?: return@mapNotNull null
-                    val count = obj["count"]?.jsonPrimitive?.long?.toInt() ?: return@mapNotNull null
-                    key to count
-                }
-                .toMap()
-        _counts.value = parsed
+        val rows = supabase.postgrest.rpc("favorite_counts").decodeList<CountRow>()
+        _counts.value = rows.associate { it.fav_key to it.count.toInt() }
     }
 
     private fun applyPending(base: Set<String>): Set<String> {
@@ -206,41 +183,34 @@ class FavoritesRepository(
     }
 
     private suspend fun fetchRemote(me: String): Set<String> {
-        val response =
-            http.pgGet(session, "/rest/v1/favorites", schema = Config.INSANE_SCHEMA) {
-                parameter("user_id", "eq.$me")
-                parameter("select", "fav_key")
-            }
-        val rows = json.parseToJsonElement(response.bodyAsText()) as? JsonArray ?: return emptySet()
-        return rows
-            .mapNotNull { (it as? JsonObject)?.get("fav_key")?.jsonPrimitive?.content }
-            .toSet()
+        val rows =
+            supabase
+                .from("favorites")
+                .select(columns = Columns.list("fav_key")) { filter { eq("user_id", me) } }
+                .decodeList<FavRow>()
+        return rows.mapTo(mutableSetOf()) { it.fav_key }
     }
 
     private suspend fun addRemote(me: String, key: String) {
-        http.pgPost(session, "/rest/v1/favorites", schema = Config.INSANE_SCHEMA) {
-            parameter("on_conflict", "user_id,fav_key")
-            header("Prefer", "resolution=ignore-duplicates,return=minimal")
-            setBody(
-                buildJsonArray {
-                    add(
-                        buildJsonObject {
-                            put("user_id", me)
-                            put("fav_key", key)
-                        }
-                    )
-                }
-            )
+        supabase.from("favorites").upsert(FavRow(user_id = me, fav_key = key)) {
+            onConflict = "user_id,fav_key"
+            ignoreDuplicates = true
         }
     }
 
     private suspend fun removeRemote(me: String, key: String) {
-        http.pgDelete(session, "/rest/v1/favorites", schema = Config.INSANE_SCHEMA) {
-            parameter("user_id", "eq.$me")
-            parameter("fav_key", "eq.$key")
+        supabase.from("favorites").delete {
+            filter {
+                eq("user_id", me)
+                eq("fav_key", key)
+            }
         }
     }
 }
+
+@Serializable private data class FavRow(val user_id: String, val fav_key: String)
+
+@Serializable private data class CountRow(val fav_key: String, val count: Long)
 
 @Serializable private data class CachedFavorites(val keys: List<String>)
 

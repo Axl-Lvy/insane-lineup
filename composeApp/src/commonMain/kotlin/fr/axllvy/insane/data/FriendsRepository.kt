@@ -1,19 +1,17 @@
 package fr.axllvy.insane.data
 
-import fr.axllvy.insane.Config
-import fr.axllvy.insane.data.auth.SessionStore
-import io.ktor.client.HttpClient
-import io.ktor.client.request.header
-import io.ktor.client.request.parameter
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.HttpStatusCode
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.exceptions.RestException
+import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -34,11 +32,7 @@ sealed interface RedeemResult {
     data class Failed(val message: String) : RedeemResult
 }
 
-class FriendsRepository(
-    private val http: HttpClient,
-    private val session: SessionStore,
-    private val nowMs: () -> Long,
-) {
+class FriendsRepository(private val supabase: SupabaseClient, private val nowMs: () -> Long) {
     private val _friends = MutableStateFlow<List<Friend>>(emptyList())
     val friends: StateFlow<List<Friend>> = _friends.asStateFlow()
 
@@ -54,6 +48,9 @@ class FriendsRepository(
         isLenient = true
     }
 
+    private val userId: String?
+        get() = supabase.auth.currentUserOrNull()?.id
+
     suspend fun loadAll() {
         loadMyProfile()
         loadFriends()
@@ -61,15 +58,13 @@ class FriendsRepository(
     }
 
     suspend fun loadMyProfile() {
-        val me = session.userId ?: return
-        val response =
-            http.pgGet(session, "/rest/v1/profiles", schema = Config.INSANE_SCHEMA) {
-                parameter("id", "eq.$me")
-                parameter("select", "display_name")
-            }
-        val rows = json.parseToJsonElement(response.bodyAsText()) as? JsonArray ?: return
-        val first = rows.firstOrNull() as? JsonObject ?: return
-        _myDisplayName.value = first["display_name"]?.jsonPrimitive?.contentOrNullSafe()
+        val me = userId ?: return
+        val row =
+            supabase
+                .from("profiles")
+                .select(columns = Columns.list("display_name")) { filter { eq("id", me) } }
+                .decodeSingleOrNull<ProfileRow>() ?: return
+        _myDisplayName.value = row.display_name
     }
 
     /**
@@ -78,23 +73,18 @@ class FriendsRepository(
      * profiles for display names.
      */
     suspend fun loadFriends() {
-        val me = session.userId ?: return
-        val response =
-            http.pgGet(session, "/rest/v1/friendships", schema = Config.INSANE_SCHEMA) {
-                parameter("a_id", "eq.$me")
-                parameter("select", "b_id,profile:profiles!friendships_b_id_fkey(display_name)")
-            }
-        val rows = json.parseToJsonElement(response.bodyAsText()) as? JsonArray ?: return
-        _friends.value = rows.mapNotNull { row ->
-            val obj = row as? JsonObject ?: return@mapNotNull null
-            val id = obj["b_id"]?.jsonPrimitive?.content ?: return@mapNotNull null
-            val displayName =
-                (obj["profile"] as? JsonObject)
-                    ?.get("display_name")
-                    ?.jsonPrimitive
-                    ?.contentOrNullSafe()
-            Friend(id = id, displayName = displayName)
-        }
+        val me = userId ?: return
+        val rows =
+            supabase
+                .from("friendships")
+                .select(
+                    columns =
+                        Columns.raw("b_id,profile:profiles!friendships_b_id_fkey(display_name)")
+                ) {
+                    filter { eq("a_id", me) }
+                }
+                .decodeList<FriendshipRow>()
+        _friends.value = rows.map { Friend(id = it.b_id, displayName = it.profile?.display_name) }
     }
 
     /** Fetch every friend's favorites (RLS scopes this to friends only). */
@@ -104,20 +94,15 @@ class FriendsRepository(
             _friendFavorites.value = emptyMap()
             return
         }
-        val inList = ids.joinToString(",", prefix = "(", postfix = ")")
-        val response =
-            http.pgGet(session, "/rest/v1/favorites", schema = Config.INSANE_SCHEMA) {
-                parameter("user_id", "in.$inList")
-                parameter("select", "user_id,fav_key")
-            }
-        val rows = json.parseToJsonElement(response.bodyAsText()) as? JsonArray ?: return
+        val rows =
+            supabase
+                .from("favorites")
+                .select(columns = Columns.list("user_id", "fav_key")) {
+                    filter { isIn("user_id", ids) }
+                }
+                .decodeList<FriendFavRow>()
         val map = mutableMapOf<String, MutableSet<String>>()
-        rows.forEach { row ->
-            val obj = row as? JsonObject ?: return@forEach
-            val uid = obj["user_id"]?.jsonPrimitive?.content ?: return@forEach
-            val key = obj["fav_key"]?.jsonPrimitive?.content ?: return@forEach
-            map.getOrPut(uid) { mutableSetOf() }.add(key)
-        }
+        rows.forEach { map.getOrPut(it.user_id) { mutableSetOf() }.add(it.fav_key) }
         _friendFavorites.value = map
     }
 
@@ -128,19 +113,8 @@ class FriendsRepository(
      */
     suspend fun rotateCode(): FriendCode? =
         runCatching {
-                val response =
-                    http.pgPost(
-                        session,
-                        "/rest/v1/rpc/rotate_friend_code",
-                        schema = Config.INSANE_SCHEMA,
-                    ) {
-                        setBody(buildJsonObject { /* no args */ })
-                    }
-                val rows =
-                    json.parseToJsonElement(response.bodyAsText()) as? JsonArray
-                        ?: return@runCatching null
-                val first = rows.firstOrNull() as? JsonObject ?: return@runCatching null
-                val code = first["code"]?.jsonPrimitive?.content ?: return@runCatching null
+                val rows = supabase.postgrest.rpc("rotate_friend_code").decodeList<RotateCodeRow>()
+                val code = rows.firstOrNull()?.code ?: return@runCatching null
                 FriendCode(code = code, expiresAtMs = nowMs() + 10 * 60 * 1000L)
             }
             .getOrNull()
@@ -150,30 +124,19 @@ class FriendsRepository(
         val cleaned = code.trim().uppercase()
         if (cleaned.length != 6) return RedeemResult.Failed("Code must be 6 characters")
         return try {
-            val response =
-                http.pgPost(
-                    session,
-                    "/rest/v1/rpc/redeem_friend_code",
-                    schema = Config.INSANE_SCHEMA,
-                ) {
-                    setBody(buildJsonObject { put("p_code", cleaned) })
-                }
-            if (response.status != HttpStatusCode.OK) {
-                return RedeemResult.Failed(parsePostgrestError(response.bodyAsText()))
-            }
-            val rows =
-                json.parseToJsonElement(response.bodyAsText()) as? JsonArray
-                    ?: return RedeemResult.Failed("Empty response")
-            val first =
-                rows.firstOrNull() as? JsonObject ?: return RedeemResult.Failed("Empty response")
-            val id =
-                first["friend_id"]?.jsonPrimitive?.content
-                    ?: return RedeemResult.Failed("Bad response")
-            val name = first["display_name"]?.jsonPrimitive?.contentOrNullSafe()
-            val friend = Friend(id = id, displayName = name)
+            val result =
+                supabase.postgrest.rpc(
+                    "redeem_friend_code",
+                    buildJsonObject { put("p_code", cleaned) },
+                )
+            val rows = runCatching { result.decodeList<RedeemRow>() }.getOrNull()
+            val first = rows?.firstOrNull() ?: return RedeemResult.Failed("Empty response")
+            val friend = Friend(id = first.friend_id, displayName = first.display_name)
             _friends.value = _friends.value + friend
             loadFriendFavorites()
             RedeemResult.Added(friend)
+        } catch (t: RestException) {
+            RedeemResult.Failed(parsePostgrestError(t.error))
         } catch (t: Throwable) {
             RedeemResult.Failed(t.message ?: "Network error")
         }
@@ -181,27 +144,29 @@ class FriendsRepository(
 
     /** Update the calling user's display name. */
     suspend fun setDisplayName(name: String) {
-        val me = session.userId ?: return
+        val me = userId ?: return
         val cleaned = name.trim().take(40)
-        http.pgPatch(session, "/rest/v1/profiles", schema = Config.INSANE_SCHEMA) {
-            parameter("id", "eq.$me")
-            header("Prefer", "return=minimal")
-            setBody(buildJsonObject { put("display_name", cleaned) })
+        supabase.from("profiles").update(buildJsonObject { put("display_name", cleaned) }) {
+            filter { eq("id", me) }
         }
         _myDisplayName.value = cleaned
     }
 
     /** Remove a friendship in both directions. */
     suspend fun unfriend(friendId: String) {
-        val me = session.userId ?: return
+        val me = userId ?: return
         // Two deletes — RLS lets me delete edges where I'm in (a, b).
-        http.pgDelete(session, "/rest/v1/friendships", schema = Config.INSANE_SCHEMA) {
-            parameter("a_id", "eq.$me")
-            parameter("b_id", "eq.$friendId")
+        supabase.from("friendships").delete {
+            filter {
+                eq("a_id", me)
+                eq("b_id", friendId)
+            }
         }
-        http.pgDelete(session, "/rest/v1/friendships", schema = Config.INSANE_SCHEMA) {
-            parameter("a_id", "eq.$friendId")
-            parameter("b_id", "eq.$me")
+        supabase.from("friendships").delete {
+            filter {
+                eq("a_id", friendId)
+                eq("b_id", me)
+            }
         }
         _friends.value = _friends.value.filterNot { it.id == friendId }
         _friendFavorites.value = _friendFavorites.value - friendId
@@ -216,6 +181,20 @@ class FriendsRepository(
             ?: body.take(120)
     }
 }
+
+@Serializable private data class ProfileRow(val display_name: String? = null)
+
+@Serializable private data class FriendshipRow(val b_id: String, val profile: ProfileRow? = null)
+
+@Serializable private data class FriendFavRow(val user_id: String, val fav_key: String)
+
+@Serializable private data class RotateCodeRow(val code: String)
+
+@Serializable
+private data class RedeemRow(
+    @SerialName("friend_id") val friend_id: String,
+    @SerialName("display_name") val display_name: String? = null,
+)
 
 /**
  * `JsonPrimitive.content` returns the literal string "null" for JSON null — we want a real Kotlin
