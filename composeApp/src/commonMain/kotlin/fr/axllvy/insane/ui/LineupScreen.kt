@@ -85,10 +85,12 @@ fun LineupScreen(
             highlightKey = null
         }
     }
-    var visibleFriends by rememberSaveable { mutableStateOf(setOf<String>()) }
+    var hiddenFriends by rememberSaveable { mutableStateOf(setOf<String>()) }
     var myCode by remember { mutableStateOf<FriendCode?>(null) }
 
     val friends by friendsRepo.friends.collectAsState()
+    val visibleFriends =
+        remember(friends, hiddenFriends) { friends.map { it.id }.toSet() - hiddenFriends }
     val myDisplayName by friendsRepo.myDisplayName.collectAsState()
     val friendFavorites by friendsRepo.friendFavorites.collectAsState()
 
@@ -213,6 +215,8 @@ fun LineupScreen(
             )
         }
 
+        LaunchedEffect(showFriends) { if (showFriends) runCatching { friendsRepo.loadAll() } }
+
         if (showFriends) {
             FriendsSheet(
                 state =
@@ -230,11 +234,11 @@ fun LineupScreen(
                 },
                 onRedeem = { code -> friendsRepo.redeem(code) },
                 onSetVisibility = { id, visible ->
-                    visibleFriends = if (visible) visibleFriends + id else visibleFriends - id
+                    hiddenFriends = if (visible) hiddenFriends - id else hiddenFriends + id
                 },
                 onUnfriend = { id ->
                     friendsRepo.unfriend(id)
-                    visibleFriends = visibleFriends - id
+                    hiddenFriends = hiddenFriends - id
                 },
                 onSetDisplayName = { name -> friendsRepo.setDisplayName(name) },
                 onLaunchScanner = { showScanner = true },

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -187,11 +188,7 @@ private fun StageColumn(
 
             val isHighlight = key == highlightKey
             val normalBg = meta.color.copy(alpha = if (isFav) 0.22f else 0.12f)
-            val normalBorder =
-                when {
-                    hasFriendInterest && !dimmed -> friendColor(friendsWhoLikeIt.first())
-                    else -> meta.color.copy(alpha = if (dimmed) 0.18f else 1f)
-                }
+            val normalBorder = meta.color.copy(alpha = if (dimmed) 0.18f else 1f)
             val starColor = InsaneColors.Star
             val highlightBg = starColor.copy(alpha = 0.30f)
             val highlightAnim = remember { Animatable(0f) }
@@ -222,20 +219,6 @@ private fun StageColumn(
                     .clickable { onSelect(key) }
                     .padding(horizontal = 5.dp, vertical = 4.dp)
             ) {
-                // Top edge stripe — one segment per visible friend who favorited this set.
-                // Reads at a glance ("Camille and Théo are going") without hiding the artist name.
-                if (hasFriendInterest) {
-                    Row(
-                        Modifier.align(Alignment.TopStart)
-                            .offset(y = (-4).dp, x = (-5).dp)
-                            .fillMaxWidth()
-                            .height(3.dp)
-                    ) {
-                        friendsWhoLikeIt.take(4).forEach { id ->
-                            Box(Modifier.weight(1f).fillMaxHeight().background(friendColor(id)))
-                        }
-                    }
-                }
                 Column {
                     Text(set.s, color = InsaneColors.OnBgTimeChip, fontSize = 8.5.sp)
                     Text(
@@ -252,12 +235,21 @@ private fun StageColumn(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
-                if (isFav || favCount > 0) {
+                if (isFav || favCount > 0 || hasFriendInterest) {
                     Row(
                         modifier = Modifier.align(Alignment.TopEnd),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(2.dp),
+                        horizontalArrangement = Arrangement.spacedBy(3.dp),
                     ) {
+                        if (hasFriendInterest && !dimmed) {
+                            friendsWhoLikeIt.take(3).forEach { id ->
+                                Box(
+                                    Modifier.size(6.dp)
+                                        .clip(CircleShape)
+                                        .background(friendColor(id))
+                                )
+                            }
+                        }
                         if (favCount > 0) {
                             Text(
                                 favCount.toString(),
