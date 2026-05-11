@@ -10,9 +10,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -29,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import fr.axllvy.insane.data.DayKey
+import fr.axllvy.insane.data.Friend
 import fr.axllvy.insane.data.LineupState
 import fr.axllvy.insane.data.StageKey
 import fr.axllvy.insane.data.splitArtists
@@ -38,8 +42,10 @@ import fr.axllvy.insane.resources.detail_fav_count_none
 import fr.axllvy.insane.resources.detail_fav_count_one
 import fr.axllvy.insane.resources.detail_fav_count_other
 import fr.axllvy.insane.resources.detail_favorite_active
+import fr.axllvy.insane.resources.detail_friends_who_like_it
 import fr.axllvy.insane.ui.InsaneColors
 import fr.axllvy.insane.ui.dayFullLabel
+import fr.axllvy.insane.ui.friends.friendColor
 import fr.axllvy.insane.ui.stageMeta
 import org.jetbrains.compose.resources.stringResource
 
@@ -50,9 +56,12 @@ internal fun DetailDialog(
     state: LineupState,
     isFav: Boolean,
     favCount: Int,
+    friends: List<Friend>,
+    friendFavorites: Map<String, Set<String>>,
     onToggleFav: () -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val friendsWhoLikeIt = friends.filter { friendFavorites[it.id].orEmpty().contains(selectedKey) }
     val parts = selectedKey.split("|")
     val stage = runCatching { StageKey.valueOf(parts[1]) }.getOrNull() ?: return
     val start = parts[2]
@@ -111,6 +120,9 @@ internal fun DetailDialog(
                     fontWeight = FontWeight.Medium,
                 )
             }
+            if (friendsWhoLikeIt.isNotEmpty()) {
+                FriendsWhoFavoritedList(friendsWhoLikeIt)
+            }
             Row(
                 Modifier.fillMaxWidth()
                     .padding(top = 10.dp)
@@ -137,6 +149,45 @@ internal fun DetailDialog(
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FriendsWhoFavoritedList(friends: List<Friend>) {
+    Column(
+        Modifier.fillMaxWidth()
+            .padding(top = 4.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(InsaneColors.Bg.copy(alpha = 0.4f))
+            .border(1.dp, InsaneColors.Border, RoundedCornerShape(10.dp))
+            .padding(10.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Text(
+            stringResource(Res.string.detail_friends_who_like_it),
+            color = InsaneColors.OnBgDim,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Black,
+        )
+        LazyColumn(
+            Modifier.fillMaxWidth().heightIn(max = 160.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            items(friends, key = { it.id }) { f ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Box(Modifier.size(8.dp).clip(CircleShape).background(friendColor(f.id)))
+                    Text(
+                        f.displayName ?: f.id.take(8),
+                        color = InsaneColors.OnBg,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
             }
         }
     }

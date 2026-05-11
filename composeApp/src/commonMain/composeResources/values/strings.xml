@@ -54,6 +54,7 @@
   <string name="detail_fav_count_none">Nobody favorited this yet</string>
   <string name="detail_fav_count_one">1 person favorited this</string>
   <string name="detail_fav_count_other">%1$d people favorited this</string>
+  <string name="detail_friends_who_like_it">Friends who favorited this</string>
 
   <!-- Friends sheet -->
   <string name="friends_title">FRIENDS</string>

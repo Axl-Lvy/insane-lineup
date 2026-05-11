@@ -198,6 +198,8 @@ fun LineupScreen(
                 state = state,
                 isFav = key in favs,
                 favCount = favCounts[key] ?: 0,
+                friends = friends.filter { it.id in visibleFriends },
+                friendFavorites = friendFavorites,
                 onToggleFav = { scope.launch { favoritesRepo.toggle(key) } },
                 onDismiss = { selected = null },
             )
