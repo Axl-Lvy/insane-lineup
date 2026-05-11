@@ -82,6 +82,7 @@ fun FriendsSheet(
     val scope = rememberCoroutineScope()
     var displayNameDialog by remember { mutableStateOf<DisplayNameDialogState?>(null) }
     var redeemFeedback by remember { mutableStateOf<String?>(null) }
+    var expandedQrCode by remember { mutableStateOf<String?>(null) }
 
     fun ensureDisplayName(after: () -> Unit) {
         if (state.myDisplayName.isNullOrBlank()) {
@@ -115,6 +116,7 @@ fun FriendsSheet(
                 code = state.myCode,
                 onRotate = { ensureDisplayName { scope.launch { onRotateCode() } } },
                 qrRenderer = qrRenderer,
+                onExpandQr = { expandedQrCode = it },
             )
 
             AddFriendSection(
@@ -158,6 +160,14 @@ fun FriendsSheet(
                 onToggleVisibility = onSetVisibility,
                 onUnfriend = { id -> scope.launch { onUnfriend(id) } },
                 modifier = Modifier.weight(1f, fill = true),
+            )
+        }
+
+        expandedQrCode?.let { code ->
+            ExpandedQrOverlay(
+                code = code,
+                qrRenderer = qrRenderer,
+                onDismiss = { expandedQrCode = null },
             )
         }
     }
@@ -215,6 +225,7 @@ private fun MyCodeSection(
     code: FriendCode?,
     onRotate: () -> Unit,
     qrRenderer: @Composable (String, Int) -> Unit,
+    onExpandQr: (String) -> Unit,
 ) {
     val ttlSec = useTtlCountdown(code?.expiresAtMs)
     Column(
@@ -282,7 +293,14 @@ private fun MyCodeSection(
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                qrRenderer(code.code, 110)
+                Box(
+                    Modifier.clip(RoundedCornerShape(6.dp))
+                        .background(Color.White)
+                        .clickable { onExpandQr(code.code) }
+                        .padding(6.dp)
+                ) {
+                    qrRenderer(code.code, 98)
+                }
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
                         code.code,
@@ -508,6 +526,43 @@ private fun FriendRow(
                 tint = InsaneColors.OnBgFaint,
                 modifier = Modifier.size(14.dp),
             )
+        }
+    }
+}
+
+@Composable
+private fun ExpandedQrOverlay(
+    code: String,
+    qrRenderer: @Composable (String, Int) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    BoxWithConstraints(
+        Modifier.fillMaxSize().background(InsaneColors.DialogScrim).clickable(onClick = onDismiss),
+        contentAlignment = Alignment.Center,
+    ) {
+        val sizeDp = (minOf(maxWidth.value, maxHeight.value) * 0.8f).toInt()
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+        ) {
+            Box(Modifier.clip(RoundedCornerShape(12.dp)).background(Color.White).padding(16.dp)) {
+                qrRenderer(code, sizeDp - 32)
+            }
+            Box(
+                Modifier.clip(RoundedCornerShape(12.dp))
+                    .background(InsaneColors.BgMid)
+                    .border(1.dp, InsaneColors.Accent.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
+                    .padding(horizontal = 20.dp, vertical = 12.dp)
+            ) {
+                Text(
+                    code,
+                    color = InsaneColors.OnBg,
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 8.sp,
+                    fontFamily = FontFamily.Monospace,
+                )
+            }
         }
     }
 }

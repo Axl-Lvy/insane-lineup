@@ -25,8 +25,8 @@ import org.jetbrains.compose.resources.stringResource
 fun QrCodeView(
     data: String,
     sizeDp: Int,
-    foreground: Color = Color.White,
-    background: Color = Color.Black,
+    foreground: Color = Color.Black,
+    background: Color = Color.White,
 ) {
     val painter =
         rememberQrCodePainter(data) {
